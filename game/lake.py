@@ -1,3 +1,4 @@
+from config.settings import FLOOD_CLEAN_MIN, FLOOD_CLEAN_MAX
 import random
 
 
@@ -11,7 +12,7 @@ class Lake:
     def get_quality(self):
         return self.water_quality
 
-    def flood_event(self, min_clean=2, max_clean=12):
+    def flood_event(self, min_clean=FLOOD_CLEAN_MIN, max_clean=FLOOD_CLEAN_MAX):
         clean_amount = random.randint(min_clean, max_clean)
         self.update_quality(clean_amount)
         return clean_amount

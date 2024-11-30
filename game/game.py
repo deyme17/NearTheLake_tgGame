@@ -1,4 +1,4 @@
-from config.settings import MAX_PLAYERS, GAME_DURATION_MONTHS, SCORE_PENALTY, SCORE_REWARD_CLEAN, MEETING_DURATION, MEETING_INTERVAL
+from config.settings import MAX_PLAYERS, GAME_DURATION_MONTHS, SCORE_PENALTY, SCORE_REWARD_CLEAN, MEETING_DURATION, MEETING_INTERVAL, ACTION_1_CLEAR_VAL, ACTION_2_CLEAR_VAL
 from game.lake import Lake
 from game.events import spring_flood
 from bot.utils import prompt_action
@@ -87,9 +87,9 @@ class Game:
             action = player_data["current_action"]
 
             if action == "1":  # Скидання
-                self.lake.update_quality(-1)  # Оновлюємо стан озера
+                self.lake.update_quality(ACTION_1_CLEAR_VAL)  # Оновлюємо стан озера
             elif action == "2":  # Очищення
-                self.lake.update_quality(1)  # Оновлюємо стан озера
+                self.lake.update_quality(ACTION_2_CLEAR_VAL)  # Оновлюємо стан озера
 
         # Оновлені бали після зміни стану озера
         score_1, score_2 = self.lake.get_current_scores()

@@ -2,15 +2,11 @@ from telegram import Update
 from telegram.ext import ContextTypes, ConversationHandler
 from game.game import Game
 from bot.message import help_message, rule_message
-from telegram import InlineKeyboardMarkup, InlineKeyboardButton
 from telegram.ext import CallbackContext
-from bot.utils import prompt_action
+from game.events import end_meeting
 from bot.controller import start_game
 from config.settings import MAX_PLAYERS
 
-
-
-ENTER_NAME = 0
 
 
 async def start(update: Update, context: CallbackContext):
@@ -47,7 +43,6 @@ async def start(update: Update, context: CallbackContext):
             await start_game(update, context)
     else:
         await update.message.reply_text("⚠️ Ви вже у грі або місця більше немає.")
-
 
 
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -100,60 +95,14 @@ async def game_status(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(status)
 
 
-async def start_meeting(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Запускає нараду для гравців."""
-    game = context.application.bot_data.get("game")
-    if not game or game.state != "in_progress":
-        await update.message.reply_text("Гра ще не розпочата.")
-        return
-
-    if game.is_meeting_active:
-        await update.message.reply_text("Нарада вже активна!")
-        return
-
-    game.start_meeting()
-    await update.message.reply_text("🗣️ Нарада почалася! Гравці можуть спілкуватися протягом 3 хвилин.")
-
-
 async def player_message(update, context):
-    """Обробляє повідомлення гравців під час нарад."""
     game = context.application.bot_data.get("game")
-    if not game or game.state != "in_progress":
-        await update.message.reply_text("Гра ще не розпочалася. Будь ласка, дочекайтеся початку.")
+    if not game or not game.meeting_active:
+        await update.message.reply_text("Нарада неактивна. Ви не можете зараз відправляти повідомлення.")
         return
 
-    if not game.is_meeting_active:
-        await update.message.reply_text("Нарада не активна зараз.")
-        return
-
-    # Додавання повідомлення до чату наради
-    user_id = update.effective_user.id
-    name = game.players.get(user_id, {}).get("name", "Невідомий гравець")
-    text = update.message.text
-
-    for player_id in game.players:
-        if player_id != user_id:
-            await context.bot.send_message(chat_id=player_id, text=f"{name}: {text}")
-
-
-    # Розсилка повідомлення всім гравцям
-    sender = update.effective_user.first_name
-    message = f"{sender}: {update.message.text}"
-
-    for user_id in game.players.keys():
-        if user_id != update.effective_user.id:  # Не надсилати повідомлення собі
-            await context.bot.send_message(chat_id=user_id, text=message)
-
-
-async def end_meeting(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Завершує нараду."""
-    game = context.application.bot_data.get("game")
-    if not game or not game.is_meeting_active:
-        await update.message.reply_text("Нарада не активна зараз.")
-        return
-
-    game.end_meeting()
-    await update.message.reply_text("⏳ Нарада завершена. Повертаємося до гри!")
+    # Логіка для обробки повідомлень під час наради
+    await update.message.reply_text(f"{update.message.from_user.first_name}: {update.message.text}")
 
 
 async def handle_action_callback(update, context):
@@ -171,10 +120,33 @@ async def handle_action_callback(update, context):
         await query.answer("Ви не зареєстровані у грі!")
         return
 
+    # Оновлюємо дію гравця
     game.players[user_id]["current_action"] = action
+
     await query.answer(f"Ви вибрали: {action}")
     await query.edit_message_text(text=f"Ваш вибір: {action}")
 
+    # Перевірка, чи всі гравці виконали дії
     if game.all_actions_collected():
-        admin_chat_id = context.bot_data.get("admin_chat_id")
-        await game.process_turn(context, admin_chat_id)
+        await game.process_turn(context)
+
+
+async def handle_end_meeting_vote(update, context):
+    """Обробляє голосування за завершення наради."""
+    game = context.application.bot_data.get("game")
+    user_id = update.effective_user.id
+
+    if not game or not game.meeting_active:
+        await update.callback_query.answer("Нарада не активна зараз.")
+        return
+
+    if user_id in game.meeting_end_votes:
+        await update.callback_query.answer("Ви вже проголосували.")
+        return
+
+    game.meeting_end_votes.add(user_id)
+    await update.callback_query.answer("Ваш голос за завершення наради зараховано.")
+
+    # Перевіряємо, чи всі проголосували
+    if len(game.meeting_end_votes) == len(game.players):
+        await end_meeting(context, game)  # Викликаємо функцію з events.py

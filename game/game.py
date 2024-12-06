@@ -1,6 +1,8 @@
 from config.settings import MAX_PLAYERS, GAME_DURATION_MONTHS, SCORE_PENALTY, SCORE_REWARD_CLEAN, MEETING_DURATION, MEETING_INTERVAL, ACTION_1_CLEAR_VAL, ACTION_2_CLEAR_VAL
+from telegram.ext import ContextTypes
+from telegram import InlineKeyboardMarkup, InlineKeyboardButton
 from game.lake import Lake
-from game.events import spring_flood
+from game.events import spring_flood, start_meeting
 from bot.utils import prompt_action
 
 
@@ -12,18 +14,30 @@ class Game:
         self.state = "waiting"  # waiting, in_progress, ended
         self.turn = 0
         self.lake = Lake()
-        self.is_meeting_active = False  # Чи активна нарада
+        self.admin_chat_id = None
+
+        self.meeting_active = False
+        self.meeting_end_votes = set()  # Гравці, які натиснули "Закінчити нараду"
 
         self.decision_1_scores = [5, 19, 26, 33, 41, 51, 64, 80, 100, 110, 121, 133, 146, 161, 177]
         self.decision_2_scores = [-20, -8, -3, 3, 7, 14, 21, 28, 35, 48, 63, 79, 92, 111, 127]
 
 
     def add_player(self, user_id, name):
-        """Додає гравця до гри."""
+        """Adds a player to the game."""
         if len(self.players) < self.max_players and user_id not in self.players:
             self.players[user_id] = {"name": name, "score": 0, "current_action": None}
+
+            # Assign the first player as admin
+            if self.admin_chat_id is None:
+                self.admin_chat_id = user_id
+
             return True, len(self.players)
         return False, len(self.players)
+    
+    def get_admin_chat_id(self):
+        """Returns the admin chat ID."""
+        return self.admin_chat_id
 
     
     async def start_game(self, context):
@@ -71,79 +85,79 @@ class Game:
 
 
 # !!!!!!!!!!!
-    async def process_turn(self, context, admin_chat_id):
-        """
-        Обробляє ігровий хід після отримання всіх дій гравців.
-        """
+    async def process_turn(self, context):
+        """Обробка ходу гри."""
+        if self.meeting_active:
+            # Повідомлення для гравців, що нарада триває
+            for user_id in self.players:
+                await context.bot.send_message(
+                    chat_id=user_id,
+                    text="⏳ Нарада триває. Хід не може розпочатися, поки нарада не завершена."
+                )
+            return
+
         if not self.all_actions_collected():
-            await context.bot.send_message(chat_id=admin_chat_id, text="Не всі гравці виконали свої дії.")
+            for user_id in self.players:
+                await context.bot.send_message(
+                    chat_id=user_id,
+                    text="Не всі гравці виконали свої дії. Очікуються дії від інших гравців."
+                )
             return
 
         previous_quality = (self.lake.level, self.lake.position)
-        has_penalty = any(player["current_action"] == "3" for player in self.players.values())  # Перевірка на штраф
+        has_penalty = any(player["current_action"] == "3" for player in self.players.values())
 
-        # Оновлюємо якість води перед обчисленням очок
+        # Обробка дій гравців
         for user_id, player_data in self.players.items():
             action = player_data["current_action"]
+            if action == "1":
+                self.lake.update_quality(-1)
+            elif action == "2":
+                self.lake.update_quality(1)
 
-            if action == "1":  # Скидання
-                self.lake.update_quality(ACTION_1_CLEAR_VAL)  # Оновлюємо стан озера
-            elif action == "2":  # Очищення
-                self.lake.update_quality(ACTION_2_CLEAR_VAL)  # Оновлюємо стан озера
-
-        # Оновлені бали після зміни стану озера
+        # Оновлення балів
         score_1, score_2 = self.lake.get_current_scores()
 
-        # Обчислюємо бали гравців
         for user_id, player_data in self.players.items():
             action = player_data["current_action"]
-            earned_points = 0  # Очки, зароблені за поточний хід
-
-            if action == "1":  # Скидання
+            earned_points = 0
+            if action == "1":
                 if has_penalty:
                     self.apply_penalty(player_data, score_1)
                     earned_points = -score_1 - SCORE_PENALTY
                 else:
                     player_data["score"] += score_1
                     earned_points = score_1
-
-            elif action == "2":  # Очищення
+            elif action == "2":
                 player_data["score"] += score_2
                 earned_points = score_2
-
-            elif action == "3":  # Штраф
+            elif action == "3":
                 for target_id, target_data in self.players.items():
-                    if target_data["current_action"] == "1":  # Скидання
+                    if target_data["current_action"] == "1":
                         self.apply_penalty(target_data, score_1)
                 player_data["score"] -= len(self.players)
                 earned_points = -len(self.players)
-
-            elif action == "4":  # Премія
+            elif action == "4":
                 for target_id, target_data in self.players.items():
-                    if target_data["current_action"] == "2":  # Очищення
+                    if target_data["current_action"] == "2":
                         self.apply_reward(target_data)
                 player_data["score"] -= len(self.players)
                 earned_points = -len(self.players)
 
-            # Відправляємо гравцю інформацію про зароблені очки
-            total_points = player_data["score"]
+            # Надсилаємо повідомлення про очки
             await context.bot.send_message(
                 chat_id=user_id,
-                text=(
-                    f"🎲 Ваш хід завершено! Ви заробили: {earned_points} очок.\n"
-                    f"📊 Ваші загальні очки: {total_points}."
-                )
+                text=(f"🎲 Ваш хід завершено! Ви заробили {earned_points} очок.\n"
+                    f"📊 Ваш загальний рахунок: {player_data['score']} очок.")
             )
 
-        flood_message = spring_flood(self.lake, self.turn)
-
-        # Очищуємо вибір гравців
-        for player_data in self.players.values():
-            player_data["current_action"] = None
+        # Надсилаємо статус озера
+        lake_status_message = self.get_lake_status(previous_quality, score_1, score_2)
+        for user_id in self.players.keys():
+            await context.bot.send_message(chat_id=user_id, text=lake_status_message)
 
         self.turn += 1
 
-        # Перевірка завершення гри
         if self.check_game_end():
             winners_message = self.get_winner()
             for user_id in self.players.keys():
@@ -151,16 +165,15 @@ class Game:
                 await context.bot.send_message(chat_id=user_id, text=winners_message)
             return
 
-        # Повідомляємо про стан озера після ходу
-        lake_status_message = self.get_lake_status(previous_quality, score_1, score_2)
-        for user_id in self.players.keys():
-            await context.bot.send_message(chat_id=user_id, text=lake_status_message)
-            if flood_message:
-                await context.bot.send_message(chat_id=user_id, text=flood_message)
+        # Запуск наради після кожного 8-го ходу
+        if self.turn % MEETING_INTERVAL == 0:
+            await start_meeting(context, self)
+            return  # Після запуску наради хід не повинен продовжуватись
 
-        # Відправляємо кнопки для нового ходу
+        # Пропонуємо дії для наступного ходу
         for user_id in self.players.keys():
             await prompt_action(context, user_id)
+
 
 
     def get_lake_status(self, previous_quality, score_1, score_2):
@@ -225,26 +238,3 @@ class Game:
             )
 
         return table
-    
-
-    def start_meeting(self):
-        """Початок наради між гравцями."""
-        self.is_meeting_active = True
-
-    def end_meeting(self):
-        """Завершення наради між гравцями."""
-        self.is_meeting_active = False
-
-    async def end_meeting_job(self, context):
-        """Автоматичне завершення наради."""
-        self.end_meeting()
-        for user_id in self.players.keys():
-            await context.bot.send_message(chat_id=user_id, text="⏳ Нарада завершена.")
-
-
-    def add_player(self, user_id, name):
-        if len(self.players) < self.max_players and user_id not in self.players:
-            self.players[user_id] = {"name": name, "score": 0, "current_action": None}
-            return True, len(self.players)  # Додаємо поточну кількість гравців
-        return False, len(self.players)
-            

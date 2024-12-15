@@ -33,3 +33,9 @@ class Lake:
         # Індекс для доступу до балів залежить від рівня
         index = self.level + 8
         return decision_1_scores[index], decision_2_scores[index]
+    
+    def reset_lake(self):
+        """Скидає стан озера до початкового."""
+        self.level = 0  # Початковий рівень озера
+        self.position = 5  # Початкова позиція в нульовому рівні
+

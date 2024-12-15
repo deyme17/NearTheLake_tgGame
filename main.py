@@ -7,7 +7,7 @@ from bot.handlers import (
     handle_action_callback,
     handle_end_meeting_vote,
 )
-from bot.controller import start_game, end_game
+from bot.controller import end_game
 from bot.utils import prompt_action
 from config.secrets import TOKEN
 from game.game import Game
@@ -24,7 +24,6 @@ def main():
     application.add_handler(CommandHandler("start", start))
     application.add_handler(CommandHandler("help", help_command))
     application.add_handler(CommandHandler("rule", rule_command))
-    application.add_handler(CommandHandler("start_game", start_game))
     application.add_handler(CommandHandler("end_game", end_game))
 
     application.add_handler(CommandHandler("action", prompt_action))

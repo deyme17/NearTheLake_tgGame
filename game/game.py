@@ -238,3 +238,13 @@ class Game:
             )
 
         return table
+    
+    
+    def reset_game(self):
+        """Скидає стан гри для початку нової."""
+        self.players = {}
+        self.state = "waiting"  # Ставимо стан гри на очікування
+        self.turn = 0
+        self.lake.reset_lake()  # Скидаємо стан озера
+        self.meeting_active = False
+        self.meeting_end_votes.clear()

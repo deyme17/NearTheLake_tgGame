@@ -46,14 +46,22 @@ async def notify_players(context: CallbackContext):
 
 async def end_game(update: Update, context: CallbackContext):
     """Завершує гру та виводить підсумкові результати."""
-    game = context.application_data.get("game")
+    game = context.application.bot_data.get("game")
     if not game:
-        await update.message.reply_text("Гра ще не створена.")
+        await update.message.reply_text("❌ Гра ще не створена.")
         return
 
-    if game.check_game_end():
-        results = game.get_winner()
-        await update.message.reply_text("🏁 Гра завершена!")
-        await update.message.reply_text(results)
-    else:
-        await update.message.reply_text("🕒 Гра ще не завершена!")
+    if game.state != "in_progress":
+        await update.message.reply_text("❌ Гра вже завершена або ще не розпочата.")
+        return
+
+    # Завершуємо гру та надсилаємо підсумки
+    game.state = "ended"
+    results = game.get_winner()
+    for user_id in game.players.keys():
+        await context.bot.send_message(chat_id=user_id, text="🏁 Гра завершена!")
+        await context.bot.send_message(chat_id=user_id, text=results)
+
+    # Очищуємо стан гри для початку нової
+    game.reset_game()
+    await update.message.reply_text("🔄 Гру завершено. Ви можете розпочати нову гру.")

@@ -34,6 +34,7 @@ def main():
     # Наради
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, player_message))
     application.add_handler(CallbackQueryHandler(handle_end_meeting_vote, pattern="end_meeting_vote"))
+    
 
     # Запуск polling
     application.run_polling()

@@ -96,19 +96,30 @@ async def game_status(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def player_message(update, context):
+    """Обробляє текстові повідомлення від гравців."""
     game = context.application.bot_data.get("game")
+    user_id = update.effective_user.id
+
     if not game or not game.meeting_active:
-        await update.message.reply_text("Нарада неактивна. Ви не можете зараз відправляти повідомлення.")
+        await update.message.reply_text("Нарада не активна. Повідомлення не приймаються.")
         return
 
-    # Логіка для обробки повідомлень під час наради
-    await update.message.reply_text(f"{update.message.from_user.first_name}: {update.message.text}")
+    player_name = game.players[user_id]["name"]
+    message_text = update.message.text
+
+    # Надсилаємо повідомлення всім гравцям
+    for target_user_id in game.players:
+        if target_user_id != user_id:  # Уникати надсилання повідомлення самому відправнику
+            await context.bot.send_message(
+                chat_id=target_user_id,
+                text=f"💬 {player_name}: {message_text}"
+            )
 
 
 async def handle_action_callback(update, context):
-    """Обробляє вибір гравця через кнопки."""
+    """Handles player actions via callback buttons."""
     query = update.callback_query
-    action = query.data  # Отримуємо вибране значення (1, 2, 3, 4)
+    action = query.data  # Get the selected action (1, 2, 3, 4)
     user_id = query.from_user.id
 
     game = context.application.bot_data.get("game")
@@ -120,15 +131,25 @@ async def handle_action_callback(update, context):
         await query.answer("Ви не зареєстровані у грі!")
         return
 
-    # Оновлюємо дію гравця
+    # Записуємо дію гравця
     game.players[user_id]["current_action"] = action
 
     await query.answer(f"Ви вибрали: {action}")
-    await query.edit_message_text(text=f"Ваш вибір: {action}")
+    await query.edit_message_text(text="Ваш вибір записано.")
 
-    # Перевірка, чи всі гравці виконали дії
+    # Перевіряємо, чи всі гравці виконали свої дії
     if game.all_actions_collected():
+        # Якщо всі гравці зробили свій вибір, запускаємо хід
         await game.process_turn(context)
+    else:
+        # Повідомляємо гравцю, що хід триває
+        remaining_players = [
+            player["name"]
+            for player_id, player in game.players.items()
+            if player["current_action"] is None
+        ]
+        message = f"Очікуємо дії від: {', '.join(remaining_players)}"
+        await context.bot.send_message(chat_id=user_id, text=message)
 
 
 async def handle_end_meeting_vote(update, context):

@@ -119,7 +119,7 @@ async def player_message(update, context):
 async def handle_action_callback(update, context):
     """Handles player actions via callback buttons."""
     query = update.callback_query
-    action = query.data  # Get the selected action (1, 2, 3, 4)
+    action = query.data
     user_id = query.from_user.id
 
     game = context.application.bot_data.get("game")
@@ -131,26 +131,31 @@ async def handle_action_callback(update, context):
         await query.answer("Ви не зареєстровані у грі!")
         return
 
+    if game.players[user_id]["current_action"] is not None:
+        await query.answer("Ви вже зробили свій вибір в цьому ході!")
+        return
+
     # Записуємо дію гравця
     game.players[user_id]["current_action"] = action
+    
+    # Повідомляємо про успішний вибір
+    action_names = {
+        "1": "Скидання",
+        "2": "Очищення",
+        "3": "Штраф",
+        "4": "Премія"
+    }
+    await query.answer(f"Ви вибрали: {action_names[action]}")
+    await query.edit_message_text(text=f"Ваш вибір: {action_names[action]}")
 
-    await query.answer(f"Ви вибрали: {action}")
-    await query.edit_message_text(text="Ваш вибір записано.")
-
-    # Перевіряємо, чи всі гравці виконали свої дії
+    # Перевіряємо, чи всі гравці зробили свій вибір
     if game.all_actions_collected():
-        # Якщо всі гравці зробили свій вибір, запускаємо хід
         await game.process_turn(context)
     else:
-        # Повідомляємо гравцю, що хід триває
-        remaining_players = [
-            player["name"]
-            for player_id, player in game.players.items()
-            if player["current_action"] is None
-        ]
-        message = f"Очікуємо дії від: {', '.join(remaining_players)}"
-        await context.bot.send_message(chat_id=user_id, text=message)
-
+        await context.bot.send_message(
+            chat_id=user_id,
+            text="Очікуємо вибір інших гравців"
+        )
 
 async def handle_end_meeting_vote(update, context):
     """Обробляє голосування за завершення наради."""

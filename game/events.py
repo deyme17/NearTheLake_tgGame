@@ -6,11 +6,9 @@ from bot.utils import prompt_action
 import random
 
 def spring_flood(lake, turn):
-    if (turn + 1) % 12 == 0:  # раз на рік
-        flood_change = random.randint(FLOOD_CLEAN_MIN, FLOOD_CLEAN_MAX)
-        lake.update_quality(flood_change)
-        return f"🌊 Весняний паводок! Якість води покращилася на {flood_change} пунктів."
-    return None
+    flood_change = random.randint(FLOOD_CLEAN_MIN, FLOOD_CLEAN_MAX)
+    lake.update_quality(flood_change)
+    return f"🌊 Весняний паводок! Якість води покращилася на {flood_change} пунктів."
 
 
 async def start_meeting(context, game):

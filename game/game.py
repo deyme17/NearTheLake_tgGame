@@ -1,6 +1,4 @@
 from config.settings import MAX_PLAYERS, GAME_DURATION_MONTHS, SCORE_PENALTY, SCORE_REWARD_CLEAN, MEETING_DURATION, MEETING_INTERVAL, ACTION_1_CLEAR_VAL, ACTION_2_CLEAR_VAL
-from telegram.ext import ContextTypes
-from telegram import InlineKeyboardMarkup, InlineKeyboardButton
 from game.lake import Lake
 from game.events import spring_flood, start_meeting
 from bot.utils import prompt_action
@@ -81,27 +79,19 @@ class Game:
 
     def all_actions_collected(self):
         """Перевіряє, чи всі гравці виконали свої дії."""
-        return all(player["current_action"] is not None for player in self.players.values())
+        return all(
+            player_data["current_action"] is not None 
+            for player_data in self.players.values()
+        )
 
 
 # !!!!!!!!!!!
     async def process_turn(self, context):
         """Обробка ходу гри."""
         if self.meeting_active:
-            # Повідомлення для гравців, що нарада триває
-            for user_id in self.players:
-                await context.bot.send_message(
-                    chat_id=user_id,
-                    text="⏳ Нарада триває. Хід не може розпочатися, поки нарада не завершена."
-                )
             return
 
         if not self.all_actions_collected():
-            for user_id in self.players:
-                await context.bot.send_message(
-                    chat_id=user_id,
-                    text="Не всі гравці виконали свої дії. Очікуються дії від інших гравців."
-                )
             return
 
         previous_quality = (self.lake.level, self.lake.position)
@@ -111,47 +101,38 @@ class Game:
         for user_id, player_data in self.players.items():
             action = player_data["current_action"]
             if action == "1":
-                self.lake.update_quality(-1)
+                self.lake.update_quality(ACTION_1_CLEAR_VAL)
             elif action == "2":
-                self.lake.update_quality(1)
+                self.lake.update_quality(ACTION_2_CLEAR_VAL)
 
         # Оновлення балів
         score_1, score_2 = self.lake.get_current_scores()
 
+        # Обробка дій та нарахування балів
         for user_id, player_data in self.players.items():
             action = player_data["current_action"]
-            earned_points = 0
             if action == "1":
                 if has_penalty:
                     self.apply_penalty(player_data, score_1)
-                    earned_points = -score_1 - SCORE_PENALTY
                 else:
                     player_data["score"] += score_1
-                    earned_points = score_1
             elif action == "2":
                 player_data["score"] += score_2
-                earned_points = score_2
             elif action == "3":
                 for target_id, target_data in self.players.items():
                     if target_data["current_action"] == "1":
                         self.apply_penalty(target_data, score_1)
                 player_data["score"] -= len(self.players)
-                earned_points = -len(self.players)
             elif action == "4":
                 for target_id, target_data in self.players.items():
                     if target_data["current_action"] == "2":
                         self.apply_reward(target_data)
                 player_data["score"] -= len(self.players)
-                earned_points = -len(self.players)
 
-            # Надсилаємо повідомлення про очки
-            await context.bot.send_message(
-                chat_id=user_id,
-                text=(f"🎲 Ваш хід завершено! Ви заробили {earned_points} очок.\n"
-                    f"📊 Ваш загальний рахунок: {player_data['score']} очок.")
-            )
+            # Скидаємо поточну дію гравця
+            player_data["current_action"] = None
 
-        # Надсилаємо статус озера
+        # Надсилаємо статус озера (один раз на хід)
         lake_status_message = self.get_lake_status(previous_quality, score_1, score_2)
         for user_id in self.players.keys():
             await context.bot.send_message(chat_id=user_id, text=lake_status_message)
@@ -165,10 +146,17 @@ class Game:
                 await context.bot.send_message(chat_id=user_id, text=winners_message)
             return
 
-        # Запуск наради після кожного 8-го ходу
+        # Перевіряємо на паводок
+        if self.turn % 12 == 0:
+            flood_message = spring_flood(self.lake, self.turn)
+            if flood_message:
+                for user_id in self.players.keys():
+                    await context.bot.send_message(chat_id=user_id, text=flood_message)
+
+        # Запуск наради
         if self.turn % MEETING_INTERVAL == 0:
             await start_meeting(context, self)
-            return  # Після запуску наради хід не повинен продовжуватись
+            return
 
         # Пропонуємо дії для наступного ходу
         for user_id in self.players.keys():

@@ -3,7 +3,6 @@ from telegram.ext import CallbackContext
 from bot.utils import prompt_action
 
 
-
 async def start_game(update: Update, context: CallbackContext):
     """Початок гри, коли всі гравці зібрані."""
     game = context.application.bot_data.get("game")
@@ -15,7 +14,7 @@ async def start_game(update: Update, context: CallbackContext):
     game.state = "in_progress"
 
     # Список учасників
-    player_list = "\n".join([f"- {data['name']}" for data in game.players.values()])
+    player_list = "\n".join([f"- {player.name}" for player in game.players.values()])
     start_message = (
         f"🎮 Гра розпочалася! Учасники:\n{player_list}\n\n"
         f"Ваш перший хід. Виберіть дію:\n"
@@ -26,13 +25,9 @@ async def start_game(update: Update, context: CallbackContext):
     )
 
     # Повідомлення всім гравцям про початок гри
-    for user_id in game.players.keys():
-        await context.bot.send_message(chat_id=user_id, text=start_message)
-
-    # Надсилаємо кнопки дій
-    for user_id in game.players.keys():
-        await prompt_action(context, user_id)
-
+    for player in game.players.values():
+        await context.bot.send_message(chat_id=player.player_id, text=start_message)
+        await prompt_action(context, player.player_id)
 
 async def end_game(update: Update, context: CallbackContext):
     """Завершує гру та виводить підсумкові результати."""
@@ -48,9 +43,9 @@ async def end_game(update: Update, context: CallbackContext):
     # Завершуємо гру та надсилаємо підсумки
     game.state = "ended"
     results = game.get_winner()
-    for user_id in game.players.keys():
-        await context.bot.send_message(chat_id=user_id, text="🏁 Гра завершена!")
-        await context.bot.send_message(chat_id=user_id, text=results)
+    for player in game.players.values():
+        await context.bot.send_message(chat_id=player.player_id, text="🏁 Гра завершена!")
+        await context.bot.send_message(chat_id=player.player_id, text=results)
 
     # Очищуємо стан гри для початку нової
     game.reset_game()

@@ -31,10 +31,10 @@ async def start(update: Update, context: CallbackContext):
         )
 
         # Оповіщення інших гравців
-        for other_id in game.players:
-            if other_id != user_id:
+        for player in game.players.values():
+            if player.player_id != user_id:
                 await context.bot.send_message(
-                    chat_id=other_id,
+                    chat_id=player.player_id,
                     text=f"👤 Гравець {user_name} приєднався до гри. Гравців: {current_count}/{MAX_PLAYERS}."
                 )
 
@@ -43,36 +43,6 @@ async def start(update: Update, context: CallbackContext):
             await start_game(update, context)
     else:
         await update.message.reply_text("⚠️ Ви вже у грі або місця більше немає.")
-
-
-async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Відправляє повідомлення з довідкою."""
-    await update.message.reply_text(help_message())
-
-
-async def rule_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Відправляє правила гри."""
-    await update.message.reply_text(rule_message())
-
-    # Відправка зображення ігрової матриці
-    try:
-        with open("assets/gameMatrix_NearTheLake.png", "rb") as photo:
-            await context.bot.send_photo(
-                chat_id=update.effective_chat.id,
-                photo=photo,
-                caption=(
-                    "🗺️ **Ігрова матриця стану води:**\n\n"
-                    "Вона показує, як змінюється якість води залежно від ваших рішень:\n"
-                    "1️⃣ **Скидання** – дає прибуток, але погіршує якість води.\n"
-                    "2️⃣ **Очищення** – поліпшує якість води, але приносить менше прибутку.\n\n"
-                    "🔄 **Індикатор якості води** переміщується:\n"
-                    "  - Вліво при скиданні (1️⃣).\n"
-                    "  - Вправо при очищенні (2️⃣).\n"
-                    "  - Рівень змінюється при переході через край матриці."
-                )
-            )
-    except FileNotFoundError:
-        await update.message.reply_text("⚠️ Не вдалося знайти зображення ігрової матриці.")
 
 async def player_message(update, context):
     """Обробляє текстові повідомлення від гравців."""
@@ -83,17 +53,16 @@ async def player_message(update, context):
         await update.message.reply_text("Нарада не активна. Повідомлення не приймаються.")
         return
 
-    player_name = game.players[user_id]["name"]
+    player = game.players[user_id]
     message_text = update.message.text
 
     # Надсилаємо повідомлення всім гравцям
-    for target_user_id in game.players:
-        if target_user_id != user_id:  # Уникати надсилання повідомлення самому відправнику
+    for other_player in game.players.values():
+        if other_player.player_id != user_id:
             await context.bot.send_message(
-                chat_id=target_user_id,
-                text=f"💬 {player_name}: {message_text}"
+                chat_id=other_player.player_id,
+                text=f"💬 {player.name}: {message_text}"
             )
-
 
 async def handle_action_callback(update, context):
     """Handles player actions via callback buttons."""
@@ -110,12 +79,13 @@ async def handle_action_callback(update, context):
         await query.answer("Ви не зареєстровані у грі!")
         return
 
-    if game.players[user_id]["current_action"] is not None:
+    player = game.players[user_id]
+    if player.current_action is not None:
         await query.answer("Ви вже зробили свій вибір в цьому ході!")
         return
 
     # Записуємо дію гравця
-    game.players[user_id]["current_action"] = action
+    player.set_action(action)
     
     # Повідомляємо про успішний вибір
     action_names = {
@@ -154,4 +124,34 @@ async def handle_end_meeting_vote(update, context):
 
     # Перевіряємо, чи всі проголосували
     if len(game.meeting_end_votes) == len(game.players):
-        await end_meeting(context, game)  # Викликаємо функцію з events.py
+        await end_meeting(context, game)
+
+
+async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Відправляє повідомлення з довідкою."""
+    await update.message.reply_text(help_message())
+
+
+async def rule_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Відправляє правила гри."""
+    await update.message.reply_text(rule_message())
+
+    # Відправка зображення ігрової матриці
+    try:
+        with open("assets/gameMatrix_NearTheLake.png", "rb") as photo:
+            await context.bot.send_photo(
+                chat_id=update.effective_chat.id,
+                photo=photo,
+                caption=(
+                    "🗺️ **Ігрова матриця стану води:**\n\n"
+                    "Вона показує, як змінюється якість води залежно від ваших рішень:\n"
+                    "1️⃣ **Скидання** – дає прибуток, але погіршує якість води.\n"
+                    "2️⃣ **Очищення** – поліпшує якість води, але приносить менше прибутку.\n\n"
+                    "🔄 **Індикатор якості води** переміщується:\n"
+                    "  - Вліво при скиданні (1️⃣).\n"
+                    "  - Вправо при очищенні (2️⃣).\n"
+                    "  - Рівень змінюється при переході через край матриці."
+                )
+            )
+    except FileNotFoundError:
+        await update.message.reply_text("⚠️ Не вдалося знайти зображення ігрової матриці.")

@@ -1,7 +1,7 @@
 class Lake:
     def __init__(self):
-        self.level = 0  # Початковий рівень (нульовий рівень)
-        self.position = 5  # Початкова позиція (5-та клітинка)
+        self.level = 0  # Початковий рівень 
+        self.position = 5  # Початкова позиція 
 
     def update_quality(self, change: int):
         """
@@ -12,12 +12,12 @@ class Lake:
         self.position += change
 
         # Перехід між рівнями:
-        if self.position > 8:  # Якщо позиція перевищує 8
-            self.level += 1  # Піднімаємося на рівень вище
-            self.position = 1  # Переносимо в першу позицію
-        elif self.position < 1:  # Якщо позиція менше 1
-            self.level -= 1  # Опускаємося на рівень нижче
-            self.position = 8  # Переносимо в останню позицію
+        if self.position > 8:  
+            self.level += 1  
+            self.position = 1  
+        elif self.position < 1:  
+            self.level -= 1  
+            self.position = 8  
 
         # Обмежуємо рівень в межах від -8 до 6
         self.level = max(-8, min(self.level, 6))
@@ -36,6 +36,6 @@ class Lake:
     
     def reset_lake(self):
         """Скидає стан озера до початкового."""
-        self.level = 0  # Початковий рівень озера
-        self.position = 5  # Початкова позиція в нульовому рівні
+        self.level = 0  
+        self.position = 5  
 

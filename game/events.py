@@ -5,7 +5,7 @@ from bot.utils import prompt_action
 
 import random
 
-def spring_flood(lake, turn):
+def spring_flood(lake):
     flood_change = random.randint(FLOOD_CLEAN_MIN, FLOOD_CLEAN_MAX)
     lake.update_quality(flood_change)
     return f"🌊 Весняний паводок! Якість води покращилася на {flood_change} пунктів."
@@ -39,9 +39,10 @@ async def start_meeting(context, game):
 
 async def end_meeting_job(context):
     """Автоматичне завершення наради."""
-    if game.meeting_active == True:
-        job_data = context.job.data
-        game = job_data["game"]
+    job_data = context.job.data
+    game = job_data["game"]
+
+    if game.meeting_active:  
         await end_meeting(context, game)
     else:
         return

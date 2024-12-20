@@ -39,9 +39,12 @@ async def start_meeting(context, game):
 
 async def end_meeting_job(context):
     """Автоматичне завершення наради."""
-    job_data = context.job.data
-    game = job_data["game"]
-    await end_meeting(context, game)
+    if game.meeting_active == True:
+        job_data = context.job.data
+        game = job_data["game"]
+        await end_meeting(context, game)
+    else:
+        return
 
 
 async def end_meeting(context, game):

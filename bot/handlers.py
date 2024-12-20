@@ -74,27 +74,6 @@ async def rule_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     except FileNotFoundError:
         await update.message.reply_text("⚠️ Не вдалося знайти зображення ігрової матриці.")
 
-
-async def reset_game(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Скидає поточну гру."""
-    context.application.bot_data["game"] = Game()
-    await update.message.reply_text("Гру скинуто. Ви можете почати нову гру.")
-
-
-async def game_status(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Відправляє стан гри адміністратору."""
-    game = context.application.bot_data.get("game")
-    if not game:
-        await update.message.reply_text("Гра ще не створена.")
-        return
-    
-    status = f"Стан гри:\n" \
-             f"Гравців: {len(game.players)}/{game.max_players}\n" \
-             f"Хід: {game.turn}\n" \
-             f"Якість води: {game.lake.water_quality}"
-    await update.message.reply_text(status)
-
-
 async def player_message(update, context):
     """Обробляє текстові повідомлення від гравців."""
     game = context.application.bot_data.get("game")

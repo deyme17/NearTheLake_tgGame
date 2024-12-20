@@ -1,3 +1,4 @@
+from bot.controller import end_game
 from config.settings import MAX_PLAYERS, GAME_DURATION_MONTHS, SCORE_PENALTY, SCORE_REWARD_CLEAN, MEETING_DURATION, MEETING_INTERVAL, ACTION_1_CLEAR_VAL, ACTION_2_CLEAR_VAL
 from game.lake import Lake
 from game.events import spring_flood, start_meeting
@@ -20,6 +21,95 @@ class Game:
         self.decision_1_scores = [5, 19, 26, 33, 41, 51, 64, 80, 100, 110, 121, 133, 146, 161, 177]
         self.decision_2_scores = [-20, -8, -3, 3, 7, 14, 21, 28, 35, 48, 63, 79, 92, 111, 127]
 
+        self.total_points = 0  
+        self.turn_points = 0 
+
+
+# !!!!!!!!!!!
+    async def process_turn(self, context):
+        """Обробка ходу гри."""
+        if self.meeting_active:
+            return
+
+        if not self.all_actions_collected():
+            return
+
+        # Збереження початкового стану балів
+        previous_quality = (self.lake.level, self.lake.position)
+        initial_scores = self.lake.get_current_scores()  # Збереження балів до змін
+
+        has_penalty = any(player["current_action"] == "3" for player in self.players.values())
+
+        # Скидання очок за хід
+        self.turn_points = 0
+
+        # Обробка дій гравців
+        for user_id, player_data in self.players.items():
+            action = player_data["current_action"]
+            earned_points = 0  # Очки гравця за поточний хід
+
+            if action == "1":
+                self.lake.update_quality(ACTION_1_CLEAR_VAL)
+                if has_penalty:
+                    self.apply_penalty(player_data, initial_scores[0])  # Використовуємо збережені бали
+                else:
+                    earned_points = initial_scores[0]
+                    player_data["score"] += earned_points
+            elif action == "2":
+                self.lake.update_quality(ACTION_2_CLEAR_VAL)
+                earned_points = initial_scores[1]  # Використовуємо збережені бали
+                player_data["score"] += earned_points
+            elif action == "3":
+                for target_id, target_data in self.players.items():
+                    if target_data["current_action"] == "1":
+                        self.apply_penalty(target_data, initial_scores[0])  # Використовуємо збережені бали
+                earned_points = -len(self.players)
+                player_data["score"] += earned_points
+            elif action == "4":
+                for target_id, target_data in self.players.items():
+                    if target_data["current_action"] == "2":
+                        self.apply_reward(target_data)
+                earned_points = -len(self.players)
+                player_data["score"] += earned_points
+
+            self.turn_points += earned_points  # Додаємо очки гравця до очок ходу
+            player_data["current_action"] = None
+
+        self.total_points += self.turn_points  # Оновлюємо сумарні очки
+
+        # Формуємо статус озера і результати
+        lake_status_message = self.get_turn_info(previous_quality, initial_scores[0], initial_scores[1])
+
+        # Надсилаємо повідомлення
+        for user_id in self.players.keys():
+            await context.bot.send_message(chat_id=user_id, text=lake_status_message)
+
+        self.turn += 1
+        if self.check_game_end():
+            winners_message = self.get_winner()
+            for user_id in self.players.keys():
+                await context.bot.send_message(chat_id=user_id, text="🏁 Гра завершена!")
+                await context.bot.send_message(chat_id=user_id, text=winners_message)
+            self.reset_game()
+            return
+
+        # Перевіряємо паводки
+        if self.turn % 12 == 0:
+            flood_message = spring_flood(self.lake, self.turn)
+            if flood_message:
+                for user_id in self.players.keys():
+                    await context.bot.send_message(chat_id=user_id, text=flood_message)
+
+        # Запуск наради
+        if self.turn % MEETING_INTERVAL == 0:
+            await start_meeting(context, self)
+            return
+
+        # Пропонуємо дії для наступного ходу
+        for user_id in self.players.keys():
+            await prompt_action(context, user_id)
+
+
 
     def add_player(self, user_id, name):
         """Adds a player to the game."""
@@ -32,41 +122,6 @@ class Game:
 
             return True, len(self.players)
         return False, len(self.players)
-    
-    def get_admin_chat_id(self):
-        """Returns the admin chat ID."""
-        return self.admin_chat_id
-
-    
-    async def start_game(self, context):
-        """Запускає гру та надсилає початкові повідомлення гравцям."""
-        self.state = "in_progress"
-        player_list = "\n".join([f"- {data['name']}" for data in self.players.values()])
-        
-        # Отримуємо бали для дій
-        score_1, score_2 = self.calculate_action_scores()
-
-        start_message = (
-            f"🎮 Гра розпочалася! Учасники:\n{player_list}\n\n"
-            f"На початку гри:\n"
-            f"- Рішення №1 (Скидання): {score_1} очок\n"
-            f"- Рішення №2 (Очищення): {score_2} очок\n"
-            f"- Рішення №3 (Штраф): -{SCORE_PENALTY} очок\n"
-            f"- Рішення №4 (Премія): +{SCORE_REWARD_CLEAN} очок\n\n"
-            f"Ваш перший хід. Виберіть дію (1: Скидання, 2: Очищення, 3: Штраф, 4: Премія)."
-        )
-        for user_id in self.players.keys():
-            await context.bot.send_message(chat_id=user_id, text=start_message)
-
-
-    def collect_actions(self, actions):
-        if self.state == "ended":
-            return 
-
-        for user_id, action in actions.items():
-            if user_id in self.players:
-                self.players[user_id]["current_action"] = action
-
 
 
     def apply_penalty(self, player_data, score_1):
@@ -85,88 +140,9 @@ class Game:
         )
 
 
-# !!!!!!!!!!!
-    async def process_turn(self, context):
-        """Обробка ходу гри."""
-        if self.meeting_active:
-            return
-
-        if not self.all_actions_collected():
-            return
-
-        previous_quality = (self.lake.level, self.lake.position)
-        has_penalty = any(player["current_action"] == "3" for player in self.players.values())
-
-        # Обробка дій гравців
-        for user_id, player_data in self.players.items():
-            action = player_data["current_action"]
-            if action == "1":
-                self.lake.update_quality(ACTION_1_CLEAR_VAL)
-            elif action == "2":
-                self.lake.update_quality(ACTION_2_CLEAR_VAL)
-
-        # Оновлення балів
-        score_1, score_2 = self.lake.get_current_scores()
-
-        # Обробка дій та нарахування балів
-        for user_id, player_data in self.players.items():
-            action = player_data["current_action"]
-            if action == "1":
-                if has_penalty:
-                    self.apply_penalty(player_data, score_1)
-                else:
-                    player_data["score"] += score_1
-            elif action == "2":
-                player_data["score"] += score_2
-            elif action == "3":
-                for target_id, target_data in self.players.items():
-                    if target_data["current_action"] == "1":
-                        self.apply_penalty(target_data, score_1)
-                player_data["score"] -= len(self.players)
-            elif action == "4":
-                for target_id, target_data in self.players.items():
-                    if target_data["current_action"] == "2":
-                        self.apply_reward(target_data)
-                player_data["score"] -= len(self.players)
-
-            # Скидаємо поточну дію гравця
-            player_data["current_action"] = None
-
-        # Надсилаємо статус озера (один раз на хід)
-        lake_status_message = self.get_lake_status(previous_quality, score_1, score_2)
-        for user_id in self.players.keys():
-            await context.bot.send_message(chat_id=user_id, text=lake_status_message)
-
-        self.turn += 1
-
-        if self.check_game_end():
-            winners_message = self.get_winner()
-            for user_id in self.players.keys():
-                await context.bot.send_message(chat_id=user_id, text="🏁 Гра завершена!")
-                await context.bot.send_message(chat_id=user_id, text=winners_message)
-            return
-
-        # Перевіряємо на паводок
-        if self.turn % 12 == 0:
-            flood_message = spring_flood(self.lake, self.turn)
-            if flood_message:
-                for user_id in self.players.keys():
-                    await context.bot.send_message(chat_id=user_id, text=flood_message)
-
-        # Запуск наради
-        if self.turn % MEETING_INTERVAL == 0:
-            await start_meeting(context, self)
-            return
-
-        # Пропонуємо дії для наступного ходу
-        for user_id in self.players.keys():
-            await prompt_action(context, user_id)
-
-
-
-    def get_lake_status(self, previous_quality, score_1, score_2):
+    def get_turn_info(self, previous_quality, score_1, score_2):
         """
-        Формує текст повідомлення про стан озера після ходу.
+        Формує текст повідомлення про інформацію після ходу.
         """
         previous_level, previous_position = previous_quality
         current_level, current_position = self.lake.level, self.lake.position
@@ -178,9 +154,13 @@ class Game:
         )
 
         result = (
+            f"⭐️Отримано балів за хід: {self.turn_points}\n"
+            f"🌟Сумарна кількість балів: {self.total_points}\n"
+            f"----------------------------------------------------------\n"
             f"🌊 Стан озера: {water_status}\n"
             f"🔄 Зміна якості води: Рівень {previous_level} -> {current_level}, "
             f"Позиція {previous_position} -> {current_position}\n"
+            f"----------------------------------------------------------\n"
             f"🏆 Поточний хід: {self.turn}/{GAME_DURATION_MONTHS}\n"
             f"📊 Бали за рішення:\n"
             f"   - Рішення №1 (скидання): {score_1}\n"
@@ -233,6 +213,7 @@ class Game:
         self.players = {}
         self.state = "waiting"  # Ставимо стан гри на очікування
         self.turn = 0
+        self.total_points = 0
         self.lake.reset_lake()  # Скидаємо стан озера
         self.meeting_active = False
         self.meeting_end_votes.clear()

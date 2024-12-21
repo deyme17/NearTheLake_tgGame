@@ -1,5 +1,5 @@
 from bot.controller import end_game
-from config.settings import MAX_PLAYERS, GAME_DURATION_MONTHS, SCORE_PENALTY, SCORE_REWARD_CLEAN, MEETING_DURATION, MEETING_INTERVAL, ACTION_1_CLEAR_VAL, ACTION_2_CLEAR_VAL
+from config.settings import MAX_PLAYERS, GAME_DURATION_MONTHS, SCORE_PENALTY, SCORE_REWARD, MEETING_DURATION, MEETING_INTERVAL, ACTION_1_CLEAR_VAL, ACTION_2_CLEAR_VAL
 from game.lake import Lake
 from game.player import Player
 from game.events import spring_flood, start_meeting
@@ -14,8 +14,10 @@ class Game:
         self.turn = 1
         self.lake = Lake()
         self.admin_chat_id = None
+
         self.meeting_active = False
         self.meeting_end_votes = set()
+
         self.total_points = 0
         self.turn_points = 0
 
@@ -52,9 +54,7 @@ class Game:
 
             if action == "1":
                 self.lake.update_quality(ACTION_1_CLEAR_VAL)
-                if has_penalty:
-                    self.apply_penalty(player, initial_scores[0])
-                else:
+                if not has_penalty:
                     earned_points = initial_scores[0]
                     player.add_points(earned_points)
 
@@ -66,8 +66,8 @@ class Game:
             elif action == "3":
                 for target in self.players.values():
                     if target.current_action == "1":
-                        self.apply_penalty(target, initial_scores[0])
-                earned_points = -SCORE_PENALTY
+                        self.apply_penalty(target)
+                earned_points = -len(self.players)
                 player.add_points(earned_points)
 
             elif action == "4":
@@ -123,13 +123,13 @@ class Game:
             await prompt_action(context, player.player_id)
 
 
-    def apply_penalty(self, player, score_1):
+    def apply_penalty(self, player):
         """Застосовує штраф до гравця"""
-        player.add_points(-SCORE_PENALTY - score_1)
+        player.add_points(-SCORE_PENALTY)
 
     def apply_reward(self, player):
         """Застосовує нагороду до гравця"""
-        player.add_points(SCORE_REWARD_CLEAN)
+        player.add_points(SCORE_REWARD)
 
 
     def all_actions_collected(self):

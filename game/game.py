@@ -47,33 +47,29 @@ class Game:
 
         # Визначаємо наявність штрафів
         has_penalty = any(player.current_action == "3" for player in self.players.values())
+        has_reward = any(player.current_action == "4" for player in self.players.values())
 
         for player in self.players.values():
-            action = player.current_action
-            earned_points = 0  
+            action = player.current_action 
 
-            if action == "1":
+            if action == "1": #  Скидання
                 self.lake.update_quality(ACTION_1_CLEAR_VAL)
                 if not has_penalty:
-                    earned_points = initial_scores[0]
-                    player.add_points(earned_points)
+                    player.add_points(initial_scores[0])
+                else:
+                    self.apply_penalty(player)
 
-            elif action == "2":
+            elif action == "2": # Очищення
                 self.lake.update_quality(ACTION_2_CLEAR_VAL)
-                earned_points = initial_scores[1]
-                player.add_points(earned_points)
+                player.add_points(initial_scores[1])
+                if has_reward:
+                    player.add_points(SCORE_REWARD)
 
-            elif action == "3":
-                for target in self.players.values():
-                    if target.current_action == "1":
-                        self.apply_penalty(target)
+            elif action == "3":  # Штраф
                 earned_points = -len(self.players)
                 player.add_points(earned_points)
 
-            elif action == "4":
-                for target in self.players.values():
-                    if target.current_action == "2":
-                        self.apply_reward(target)
+            elif action == "4":  # Нагорода
                 earned_points = -len(self.players)
                 player.add_points(earned_points)
 

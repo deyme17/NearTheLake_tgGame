@@ -45,7 +45,7 @@ class Game:
         previous_quality = (self.lake.level, self.lake.position)
         initial_scores = self.lake.get_current_scores()
 
-        # Визначаємо наявність штрафів
+        # Визначаємо наявність штрафів або нагород
         has_penalty = any(player.current_action == "3" for player in self.players.values())
         has_reward = any(player.current_action == "4" for player in self.players.values())
 

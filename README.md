@@ -1,6 +1,4 @@
-﻿# NearTheLake_tgGame
-
-# A Business Simulation Game
+﻿# NearTheLake_tgGame - A Business Simulation Game
 
 **Overview**
 

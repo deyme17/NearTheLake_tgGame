@@ -1,6 +1,6 @@
 from game.gamelogic.turn_processor import TurnProcessor
 from messages.player_state_messages import not_registered_message
-from messages.game_state_messages import game_started_messege
+from messages.game_state_messages import game_started_negative_messege
 from messages.action_messages import choice_message, chosen_action_message, wait_others_message, have_chosen_action
 from config.helpers import get_game
 
@@ -13,7 +13,7 @@ class ActionUseCase:
         user_id = query.from_user.id
 
         if game.state != "in_progress":
-            await query.answer(game_started_messege)
+            await query.answer(game_started_negative_messege)
             return
 
         if user_id not in game.players:

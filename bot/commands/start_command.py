@@ -1,14 +1,22 @@
-from commands.command import BaseCommand
-from bot.controllers.game_controller import GameController
-from messages.game_state_messages import game_started_messege
+from bot.commands.command import BaseCommand
+from bot.services.registrar_service import PlayerRegistrar
+from messages.player_state_messages import in_game_now_message
+from messages.action_messages import first_action
+from bot.services.ui_refresh_service import UIRefreshService
+from bot.services.state_service import StateService
 
 class StartGameCommand(BaseCommand):
     def matches(self, text: str) -> bool:
         return text.strip().lower() == "почати гру"
 
     async def execute(self, update, context, game):
-        if game.state == "waiting":
-            await GameController.start_game(update, context)
-            context.user_data["state"] = "in_game"
-        else:
-            await update.message.reply_text(game_started_messege)
+        user_id = update.effective_user.id
+
+        if user_id in game.players:
+            await UIRefreshService.reply(update, context, in_game_now_message)
+            return
+
+        success, game_started = await PlayerRegistrar.handle_start(update, context, game)
+
+        if success:
+            StateService.set_state(context, user_id, "in_game")

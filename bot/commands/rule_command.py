@@ -1,4 +1,4 @@
-from commands.command import BaseCommand
+from bot.commands.command import BaseCommand
 from bot.controllers.info_controller import InfoController
 
 class ShowRulesCommand(BaseCommand):

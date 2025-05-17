@@ -1,40 +1,7 @@
-from telegram import Update
-from telegram.ext import CallbackContext
-from config.settings import MAX_PLAYERS
-from game.gamelogic.game_flow_manager import GameFlowManager
-from messages.state_messages import game_not_configure_message, game_started_negative_messege
-from messages.state_messages import (
-    joined_message, player_connected_message, game_full_message
-)
+from bot.services.player_service import PlayerService
 
 class PlayerController:
     @staticmethod
-    async def register_player(update: Update, context: CallbackContext):
+    async def register_player(update, context):
         game = context.application.bot_data.get("game")
-        user_id = update.effective_user.id
-        user_name = update.effective_user.first_name
-
-        if not game:
-            await update.message.reply_text(game_not_configure_message)
-            return
-
-        if game.state != "waiting":
-            await update.message.reply_text(game_started_negative_messege)
-            return
-
-        success, current_count = game.add_player(user_id, user_name)
-        if success:
-            await update.message.reply_text(joined_message(user_name, current_count))
-
-            # inform others
-            for player in game.players.values():
-                if player.player_id != user_id:
-                    await context.bot.send_message(
-                        chat_id=player.player_id,
-                        text=player_connected_message(user_name, current_count)
-                    )
-            # start
-            if current_count == MAX_PLAYERS:
-                await GameFlowManager.start_game(game, context)
-        else:
-            await update.message.reply_text(game_full_message)
+        await PlayerService.register(update, context, game)

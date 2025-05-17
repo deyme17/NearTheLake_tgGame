@@ -1,9 +1,9 @@
 from .action_service import ActionUseCase
-from .registrar_service import PlayerRegistrar
+from .player_service import PlayerService
 from .discussion_service import MessageRelayService
 
 __all__ = [
     "ActionUseCase",
-    "PlayerRegistrar",
+    "PlayerService",
     "MessageRelayService",
 ]

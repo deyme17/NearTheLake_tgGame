@@ -1,7 +1,7 @@
 from telegram import Update
 from telegram.ext import CallbackContext, ContextTypes
 
-from bot.services.registrar_service import PlayerRegistrar
+from bot.services.player_service import PlayerService
 from bot.controllers.info_controller import InfoController
 from bot.controllers.game_controller import GameController
 
@@ -17,7 +17,7 @@ async def start(update: Update, context: CallbackContext):
 
 async def start_game_command(update: Update, context: CallbackContext):
     game = get_game(context)
-    await PlayerRegistrar.handle_start(update, context, game)
+    await PlayerService.register(update, context, game)
 
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await InfoController.help(update, context)

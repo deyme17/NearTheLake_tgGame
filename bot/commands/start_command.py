@@ -1,5 +1,5 @@
 from bot.commands.command import BaseCommand
-from bot.services.registrar_service import PlayerRegistrar
+from bot.services.player_service import PlayerService
 from messages.state_messages import in_game_now_message
 from bot.services.ui_refresh_service import UIRefreshService
 from bot.services.state_service import StateService
@@ -15,7 +15,6 @@ class StartGameCommand(BaseCommand):
             await UIRefreshService.reply(update, context, in_game_now_message)
             return
 
-        success, game_started = await PlayerRegistrar.handle_start(update, context, game)
-
+        success, count = await PlayerService.register(update, context, game)
         if success:
             StateService.set_state(context, user_id, "in_game")

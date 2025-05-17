@@ -1,19 +1,27 @@
 from config.settings import MAX_PLAYERS
-from game.gamelogic.game_flow_manager import GameFlowManager
-from messages.state_messages import (game_started_negative_messege, joined_message, 
-                                     player_connected_message, game_full_message
+from messages.state_messages import (
+    game_not_configure_message, game_started_negative_messege,
+    joined_message, player_connected_message, game_full_message
 )
+from game.gamelogic.game_flow_manager import GameFlowManager
 
-class PlayerRegistrar:
+
+class PlayerService:
     @staticmethod
-    async def handle_start(update, context, game):
-        """Returns: is_added, is_started: bool, bool"""
-        user_id = update.effective_user.id
-        user_name = update.effective_user.first_name
+    async def register(update, context, game):
+        """
+        Returns: success: bool, current_count: int or None
+        """
+        if not game:
+            await update.message.reply_text(game_not_configure_message)
+            return False, None
 
         if game.state != "waiting":
             await update.message.reply_text(game_started_negative_messege)
-            return False, False
+            return False, None
+
+        user_id = update.effective_user.id
+        user_name = update.effective_user.first_name
 
         success, current_count = game.add_player(user_id, user_name)
         if success:
@@ -28,10 +36,9 @@ class PlayerRegistrar:
 
             if current_count == MAX_PLAYERS:
                 await GameFlowManager.start_game(game, context)
-                return True, True
 
-            return True, False
+            return True, current_count
 
         else:
             await update.message.reply_text(game_full_message)
-            return False, False
+            return False, None

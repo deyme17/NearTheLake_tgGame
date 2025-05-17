@@ -6,6 +6,7 @@ class Player:
         self.current_action = None 
         self.current_turn_points = 0  
         self.turn_number = 0  
+        self.last_message_id = None
 
     def reset(self):
         """

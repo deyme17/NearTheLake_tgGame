@@ -1,5 +1,6 @@
 from game.gamelogic.action_service import ActionService
 from messages.game_message_service import GameMessageService
+from game.gamelogic.game_flow_manager import GameFlowManager
 from bot.ui_components.promt_action import prompt_action
 from config.settings import MEETING_INTERVAL, FLOOD_INTERVAL, GAME_DURATION_MONTHS
 from game.events.meeting import Meeting
@@ -34,6 +35,13 @@ class TurnProcessor:
             self.action_service.apply_action(game, player)
             player.clear_action()
 
+    async def _clear_previous_turn_results(self, player, context):
+        if hasattr(player, "last_message_id") and player.last_message_id:
+            try:
+                await context.bot.delete_message(chat_id=player.player_id, message_id=player.last_message_id)
+            except:
+                pass
+
     async def _notify_players_results(self, game, context, previous_quality):
         next_scores = game.lake.get_current_scores()
         current_quality = (
@@ -44,6 +52,8 @@ class TurnProcessor:
         )
 
         for player in game.players.values():
+            await self._clear_previous_turn_results(player, context)
+
             turn_info = GameMessageService.get_turn_info(
                 previous_quality,
                 current_quality,
@@ -53,19 +63,17 @@ class TurnProcessor:
                 player.score
             )
 
-            await context.bot.send_message(chat_id=player.player_id, text=turn_info)
+            msg = await context.bot.send_message(chat_id=player.player_id, text=turn_info)
+            player.last_message_id = msg.message_id
+
             player.clear_curr_turn_points()
 
     async def _advance_turn_and_check_end(self, game, context):
         if game.check_game_end():
-            winners_message = GameMessageService.get_winner_message(game.players, game.state == "ended")
-            for player in game.players.values():
-                await context.bot.send_message(chat_id=player.player_id, text=game_finished_message)
-                await context.bot.send_message(chat_id=player.player_id, text=winners_message)
-            game.reset_game()
+            await GameFlowManager.end_game(game, context)
             return True
         return False
-    
+
     async def _trigger_events(self, game, context):
         if game.turn % FLOOD_INTERVAL == 0:
             flood_message = SpringFlood.start_flood(game.lake)

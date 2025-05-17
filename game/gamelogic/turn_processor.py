@@ -1,6 +1,6 @@
-from game.gamelogic.action_service import ActionService
+from game.gamelogic.action_executor import ActionService
 from messages.game_message_service import GameMessageService
-from game.gamelogic.game_flow_manager import GameFlowManager
+from game.gamelogic.game_engine import GameEngine
 from bot.ui_components.promt_action import prompt_action
 from config.settings import MEETING_INTERVAL, FLOOD_INTERVAL, GAME_DURATION_MONTHS
 from game.events.meeting import Meeting
@@ -70,7 +70,7 @@ class TurnProcessor:
 
     async def _advance_turn_and_check_end(self, game, context):
         if game.check_game_end():
-            await GameFlowManager.end_game(game, context)
+            await GameEngine(game, context).end_game()
             return True
         return False
 

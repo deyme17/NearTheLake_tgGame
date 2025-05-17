@@ -12,7 +12,8 @@ class IdleStateCommandManager:
             SettingsCommand()
         ]
 
-    async def handle(self, text, update, context, game):
+    async def handle(self, update, context, game):
+        text = update.message.text.strip().lower()
         for command in self.commands:
             if command.matches(text):
                 await command.execute(update, context, game)

@@ -3,7 +3,7 @@ from messages.state_messages import (
     game_not_configure_message, game_started_negative_messege,
     joined_message, player_connected_message, game_full_message
 )
-from game.gamelogic.game_flow_manager import GameFlowManager
+from game.gamelogic.game_engine import GameEngine
 
 
 class PlayerService:
@@ -35,7 +35,7 @@ class PlayerService:
                     )
 
             if current_count == MAX_PLAYERS:
-                await GameFlowManager.start_game(game, context)
+                await GameEngine(game, context).start_game()
 
             return True, current_count
 

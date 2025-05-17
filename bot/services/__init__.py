@@ -1,4 +1,4 @@
-from .action_service import ActionUseCase
+from .action_usecase import ActionUseCase
 from .player_service import PlayerService
 from .discussion_service import MessageRelayService
 

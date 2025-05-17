@@ -1,4 +1,4 @@
-from messages.player_state_messages import not_member_message
+from messages.state_messages import not_member_message
 from messages.events_messages import no_communication_message
 
 class MessageRelayService:

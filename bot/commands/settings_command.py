@@ -1,5 +1,5 @@
 from bot.commands.command import BaseCommand
-from messages.settings_message import settings_not_available_message
+from messages.general_messages import settings_not_available_message
 from bot.services.ui_refresh_service import UIRefreshService
 
 class SettingsCommand(BaseCommand):

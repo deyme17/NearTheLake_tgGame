@@ -1,7 +1,6 @@
 from bot.commands.command import BaseCommand
 from bot.services.registrar_service import PlayerRegistrar
-from messages.player_state_messages import in_game_now_message
-from messages.action_messages import first_action
+from messages.state_messages import in_game_now_message
 from bot.services.ui_refresh_service import UIRefreshService
 from bot.services.state_service import StateService
 

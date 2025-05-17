@@ -1,3 +1,4 @@
+
 from config.settings import MEETING_DURATION
 
 def spring_flood_messege(flood_change):

@@ -2,7 +2,7 @@ class GameMessageService:
     @staticmethod
     def get_turn_info(previous_quality, current_quality, turn, game_duration_months, current_points, score):
         previous_level, previous_position = previous_quality
-        current_level, current_position = current_quality
+        current_level, current_position = current_quality[:2]
 
         water_status = (
             "Чиста вода" if current_level >= 4 else
@@ -10,7 +10,8 @@ class GameMessageService:
             "Брудна вода"
         )
 
-        score_1, score_2 = current_quality[2], current_quality[3] if len(current_quality) > 2 else (0, 0)
+        score_1 = current_quality[2] if len(current_quality) > 2 else 0
+        score_2 = current_quality[3] if len(current_quality) > 3 else 0
 
         return (
             f"⭐️ Ваші очки за цей хід: {current_points}\n"

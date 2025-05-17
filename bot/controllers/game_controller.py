@@ -15,9 +15,9 @@ class GameController:
         await GameFlowManager.start_game(game, context)
 
     @staticmethod
-    async def end_game(update: Update, context: CallbackContext):
+    async def end_game(update, context, update_for_flow=None):
         game = get_game(context)
         if not game:
             await update.message.reply_text(game_not_created_messege)
             return
-        await GameFlowManager.end_game(game, context, update)
+        await GameFlowManager.end_game(game, context, update_for_flow or update)

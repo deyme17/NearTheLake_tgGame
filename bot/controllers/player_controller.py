@@ -2,8 +2,8 @@ from telegram import Update
 from telegram.ext import CallbackContext
 from config.settings import MAX_PLAYERS
 from game.gamelogic.game_flow_manager import GameFlowManager
-from messages.game_state_messages import game_started_message, game_not_configure_message
-from messages.player_state_messages import (
+from messages.state_messages import game_not_configure_message, game_started_negative_messege
+from messages.state_messages import (
     joined_message, player_connected_message, game_full_message
 )
 
@@ -19,7 +19,7 @@ class PlayerController:
             return
 
         if game.state != "waiting":
-            await update.message.reply_text(game_started_message)
+            await update.message.reply_text(game_started_negative_messege)
             return
 
         success, current_count = game.add_player(user_id, user_name)

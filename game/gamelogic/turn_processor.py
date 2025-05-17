@@ -5,7 +5,7 @@ from bot.ui_components.promt_action import prompt_action
 from config.settings import MEETING_INTERVAL, FLOOD_INTERVAL, GAME_DURATION_MONTHS
 from game.events.meeting import Meeting
 from game.events.spring_flood import SpringFlood
-from messages.game_state_messages import game_finished_message
+from messages.state_messages import game_finished_message
 
 class TurnProcessor:
     def __init__(self):

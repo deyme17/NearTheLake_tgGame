@@ -1,1 +1,0 @@
-settings_not_available_message = "⚠️ Налаштування доступні лише до початку гри."

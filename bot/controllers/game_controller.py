@@ -2,7 +2,7 @@ from telegram import Update
 from telegram.ext import CallbackContext
 
 from game.gamelogic.game_flow_manager import GameFlowManager
-from messages.game_state_messages import game_started_or_not_configure_messege, game_not_created_messege
+from messages.state_messages import game_started_or_not_configure_messege, game_not_created_messege
 from config.helpers import get_game
 
 class GameController:

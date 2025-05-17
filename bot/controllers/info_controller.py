@@ -1,7 +1,7 @@
 from telegram import Update
 from telegram.ext import CallbackContext
-from messages.help_message import help_message
-from messages.rule_message import rule_message, game_water_matrix_message, game_water_matrix_not_found_message
+from messages.general_messages import help_message
+from messages.rules_messages import rule_message, game_water_matrix_message, game_water_matrix_not_found_message
 from config.constants import game_matrix_path
 
 class InfoController:

@@ -42,3 +42,4 @@ class GameMessageService:
             table += "{:<4} {:<20} {:<10}\n".format(rank, player.name, player.score)
 
         return table
+

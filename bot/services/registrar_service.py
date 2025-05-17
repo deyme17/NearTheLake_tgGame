@@ -1,7 +1,8 @@
 from config.settings import MAX_PLAYERS
 from game.gamelogic.game_flow_manager import GameFlowManager
-from messages.game_state_messages import game_started_negative_messege
-from messages.player_state_messages import joined_message, player_connected_message, game_full_message
+from messages.state_messages import (game_started_negative_messege, joined_message, 
+                                     player_connected_message, game_full_message
+)
 
 class PlayerRegistrar:
     @staticmethod

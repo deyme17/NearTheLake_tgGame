@@ -7,7 +7,7 @@ from bot.controllers.game_controller import GameController
 
 from bot.ui_components.keyboard import get_keyboard_for_state
 from config.helpers import get_game
-from messages.start_message import greeting_menu_messsge
+from messages.general_messages import greeting_menu_messsge
 
 async def start(update: Update, context: CallbackContext):
     await update.message.reply_text(

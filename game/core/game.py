@@ -17,6 +17,9 @@ class Game:
         self.meeting_active = False
         self.meeting_end_votes = set()
 
+        self.end_game_votes = set()
+        self.end_vote_active = False
+
         self.total_points = 0
         self.turn_points = 0
 
@@ -55,3 +58,5 @@ class Game:
         self.lake.reset_lake()
         self.meeting_active = False
         self.meeting_end_votes.clear()
+        self.end_vote_active = False
+        self.end_game_votes.clear()

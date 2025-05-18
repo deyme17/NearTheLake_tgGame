@@ -17,4 +17,4 @@ class StartGameCommand(BaseCommand):
 
         success, count = await PlayerService.register(update, context, game)
         if success:
-            StateService.set_state(context, user_id, "in_game")
+            StateService.set_state(context, user_id, "waiting_lobby")

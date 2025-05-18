@@ -3,6 +3,8 @@ from messages.state_messages import (
     joined_message, player_connected_message, game_full_message
 )
 from game.gamelogic.game_engine import GameEngine
+from bot.services.state_service import StateService
+from bot.services.ui_refresh_service import UIRefreshService
 
 
 class PlayerService:
@@ -24,7 +26,14 @@ class PlayerService:
 
         success, current_count = game.add_player(user_id, user_name)
         if success:
-            await update.message.reply_text(joined_message(user_name, current_count, game))
+            StateService.set_state(context, user_id, "waiting_lobby")
+
+            await UIRefreshService.update_keyboard(
+                bot=context.bot,
+                chat_id=user_id,
+                text=joined_message(user_name, current_count, game),
+                state="waiting_lobby"
+            )
 
             for player in game.players.values():
                 if player.player_id != user_id:

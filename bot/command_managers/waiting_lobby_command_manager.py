@@ -22,7 +22,5 @@ class WaitingLobbyCommandManager:
         user_id = update.effective_user.id
         player = game.players.get(user_id)
 
-        if player:
-            await update.message.reply_text(joined_message(player.name, len(game.players), game))
-        else:
+        if not player:
             await update.message.reply_text(waiting_for_player_message)

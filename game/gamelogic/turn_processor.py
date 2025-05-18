@@ -2,7 +2,8 @@ from game.gamelogic.action_executor import ActionService
 from messages.game_message_service import GameMessageService
 from game.gamelogic.game_engine import GameEngine
 from bot.ui_components.promt_action import prompt_action
-from config.settings import MEETING_INTERVAL, FLOOD_INTERVAL, GAME_DURATION_MONTHS
+from config.settings import MEETING_INTERVAL, FLOOD_INTERVAL
+from config.constants import ACTION_BONUS, ACTION_PENALTY
 from game.events.meeting import Meeting
 from game.events.spring_flood import SpringFlood
 from messages.state_messages import game_finished_message
@@ -17,12 +18,13 @@ class TurnProcessor:
 
         previous_quality = (game.lake.level, game.lake.position)
 
+        self._collect_flags(game)
         self._apply_all_actions(game)
-        await self._notify_players_results(game, context, previous_quality)
 
-        game.turn += 1
+        await self._notify_players_results(game, context, previous_quality)
         if await self._advance_turn_and_check_end(game, context):
             return
+        game.turn += 1
 
         await self._trigger_events(game, context)
         await self._prompt_next_actions(game, context)
@@ -34,6 +36,14 @@ class TurnProcessor:
         for player in game.players.values():
             self.action_service.apply_action(game, player)
             player.clear_action()
+
+        # clear
+        delattr(game, 'has_bonus')
+        delattr(game, 'has_penalty')
+
+    def _collect_flags(self, game):
+        game.has_bonus = any(p.current_action == ACTION_BONUS for p in game.players.values())
+        game.has_penalty = any(p.current_action == ACTION_PENALTY for p in game.players.values())
 
     async def _clear_previous_turn_results(self, player, context):
         if hasattr(player, "last_message_id") and player.last_message_id:

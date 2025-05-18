@@ -43,7 +43,6 @@ class Game:
     def check_game_end(self):
         """Checks if the game end has been reached"""
         if self.turn >= self.settings.game_duration_months:
-            self.state = "ended"
             return True
         return False
 

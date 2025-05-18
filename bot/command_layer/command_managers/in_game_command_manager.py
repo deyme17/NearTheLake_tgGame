@@ -1,8 +1,8 @@
-from bot.commands.command import BaseCommand
-from bot.commands.rule_command import ShowRulesCommand
-from bot.commands.end_command import EndGameCommand
-from bot.services.discussion_service import MessageRelayService
-from bot.command_managers.command_manager import BaseCommandManager
+from bot.command_layer.commands.command import BaseCommand
+from bot.command_layer.commands.rule_command import ShowRulesCommand
+from bot.command_layer.commands.end_command import EndGameCommand
+from bot.command_layer.command_managers.command_manager import BaseCommandManager
+from bot.services.meeting_service import MeetingService
 from messages.events_messages import no_communication_message 
 
 class InGameStateCommandManager(BaseCommandManager):
@@ -17,7 +17,7 @@ class InGameStateCommandManager(BaseCommandManager):
         text = update.message.text.strip().lower()
 
         if game.meeting_active:
-            await MessageRelayService.forward_player_message(update, context, game)
+            await MeetingService.forward_player_message(update, context, game)
             return
 
         for command in self.commands:

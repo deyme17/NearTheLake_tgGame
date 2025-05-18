@@ -7,7 +7,7 @@ from bot.ui_components.promt_action import prompt_action
 from bot.handlers.settings_handlers import handle_settings_callback
 
 from config.secrets import TOKEN
-from game.core.game import Game
+from game.core.models.game import Game
 
 def create_app():
     application = ApplicationBuilder() \

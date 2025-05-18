@@ -1,6 +1,6 @@
 from game.core.game_settings import GameSettings
-from game.core.lake import Lake
-from game.core.player import Player
+from game.core.models.lake import Lake
+from game.core.models.player import Player
 from config import settings
 
 class Game:

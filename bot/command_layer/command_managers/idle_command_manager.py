@@ -1,8 +1,8 @@
-from bot.commands.command import BaseCommand
-from bot.commands.rule_command import ShowRulesCommand
-from bot.commands.start_command import StartGameCommand
-from bot.commands.settings_command import SettingsCommand
-from bot.command_managers.command_manager import BaseCommandManager
+from bot.command_layer.commands.command import BaseCommand
+from bot.command_layer.commands.rule_command import ShowRulesCommand
+from bot.command_layer.commands.start_command import StartGameCommand
+from bot.command_layer.commands.settings_command import SettingsCommand
+from bot.command_layer.command_managers.command_manager import BaseCommandManager
 from messages.error_messages import uknown_parameter_message
 from messages.general_messages import settings_updated_message, settings_invalid_value
 

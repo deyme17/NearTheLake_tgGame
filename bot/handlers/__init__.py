@@ -1,4 +1,4 @@
-from .command_dispatcher import CommandDispatcher
+from ..command_layer.dispatcher import CommandDispatcher
 from .command_handlers import (
     start,
     help_command,

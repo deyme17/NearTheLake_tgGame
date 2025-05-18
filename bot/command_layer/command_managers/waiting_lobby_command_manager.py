@@ -1,7 +1,7 @@
-from bot.commands.command import BaseCommand
-from bot.commands.rule_command import ShowRulesCommand
-from bot.commands.leave_lobby_command import LeaveLobbyCommand
-from bot.command_managers.command_manager import BaseCommandManager
+from bot.command_layer.commands.command import BaseCommand
+from bot.command_layer.commands.rule_command import ShowRulesCommand
+from bot.command_layer.commands.leave_lobby_command import LeaveLobbyCommand
+from bot.command_layer.command_managers.command_manager import BaseCommandManager
 from messages.state_messages import waiting_for_player_message
 
 class WaitingLobbyCommandManager(BaseCommandManager):

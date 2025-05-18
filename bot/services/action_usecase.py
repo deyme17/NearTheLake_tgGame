@@ -1,9 +1,10 @@
 from game.gamelogic.turn_processor import TurnProcessor
-from messages.state_messages import not_registered_message
-from messages.state_messages import game_started_negative_messege
+from messages.state_messages import not_registered_message, game_started_negative_messege
 from messages.action_messages import choice_message, chosen_action_message, wait_others_message, have_chosen_action
 from config.helpers import get_game
 from telegram.error import BadRequest
+from game.core.game_coordinator import GameCoordinator
+from bot.ui_components.promt_action import prompt_action
 
 class ActionUseCase:
     @staticmethod
@@ -36,9 +37,27 @@ class ActionUseCase:
                 raise
 
         if game.all_actions_collected():
-            await TurnProcessor().process_turn(game, context)
+            actions = await TurnProcessor().process_turn(game, context)
+            for act in actions:
+                await ActionUseCase._execute_act(act, context, game)
         else:
             await context.bot.send_message(
                 chat_id=user_id,
                 text=wait_others_message
             )
+
+    @staticmethod
+    async def _execute_act(act, context, game):
+        match act["type"]:
+            case "send_message":
+                await context.bot.send_message(
+                    chat_id=act["chat_id"],
+                    text=act["text"]
+                )
+            case "prompt_action":
+                await prompt_action(context, act["chat_id"])
+            case "start_meeting":
+                from game.events.meeting import Meeting
+                await Meeting.start_meeting(context, game)
+            case "end_game":
+                await GameCoordinator.end_game(game, context)

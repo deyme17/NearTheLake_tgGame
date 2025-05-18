@@ -1,5 +1,64 @@
+# Python bytecode
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Virtual environment
+venv/
+.env/
+.envrc
+.venv/
+
 .env
 
-__pycache__/
-*.pyc
-*.pyo
+# IDE configs
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# PyCharm
+*.iml
+*.iws
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs and temp
+*.log
+*.bak
+*.swp
+*.tmp
+
+# Pip freeze output
+requirements.txt~
+
+# SQLite or other data
+*.sqlite
+*.db
+*.db-journal
+
+# Compiled C extensions
+*.so
+
+# Test cache
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Build artifacts
+build/
+dist/
+*.egg-info/
+
+# Local secrets
+secrets.json
+config/secrets.py
+
+# VSCode debug settings
+.vscode/launch.json
+.vscode/tasks.json

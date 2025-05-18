@@ -1,4 +1,4 @@
-from bot.handlers.game_state_router import GameStateRouter
+from bot.command_layer.router import GameStateRouter
 from messages.error_messages import uknown_state_message
 
 class CommandDispatcher:

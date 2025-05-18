@@ -1,10 +1,11 @@
 from telegram import Update
 from telegram.ext import CallbackContext, ContextTypes
 
-from bot.services.player_service import PlayerService
-from bot.controllers.info_controller import InfoController
-from bot.controllers.game_controller import GameController
+from bot.services.session_service import SessionService
+from game.core.game_coordinator import GameCoordinator
 
+from messages.rules_messages import rule_message
+from messages.general_messages import help_message
 from bot.ui_components.keyboard import get_keyboard_for_state
 from config.helpers import get_game
 from messages.general_messages import greeting_menu_messsge
@@ -18,13 +19,15 @@ async def start(update: Update, context: CallbackContext):
 
 async def start_game_command(update: Update, context: CallbackContext):
     game = get_game(context)
-    await PlayerService.register(update, context, game)
+    await SessionService.register_player(update, context, game)
 
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await InfoController.help(update, context)
+    await update.message.reply_text(help_message())
 
 async def rule_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await InfoController.rules(update, context)
+    await update.message.reply_text(rule_message())
 
 async def end_game_command(update: Update, context: CallbackContext):
-    await GameController.end_game(update, context)
+    await GameCoordinator.end_game(get_game(context), context, update)
+
+

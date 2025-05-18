@@ -1,5 +1,5 @@
 from telegram import InlineKeyboardMarkup, InlineKeyboardButton
-from bot.commands.command import BaseCommand
+from bot.command_layer.commands.command import BaseCommand
 from messages.general_messages import settings_menu_title, settings_unavailable_message, param_ua
 
 class SettingsCommand(BaseCommand):

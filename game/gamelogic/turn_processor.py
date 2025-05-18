@@ -1,12 +1,9 @@
 from game.gamelogic.action_executor import ActionService
-from messages.game_message_service import GameMessageService
-from game.gamelogic.game_engine import GameEngine
-from bot.ui_components.promt_action import prompt_action
-from config.settings import MEETING_INTERVAL, FLOOD_INTERVAL
+from config.settings import FLOOD_INTERVAL
 from config.constants import ACTION_BONUS, ACTION_PENALTY
 from game.events.meeting import Meeting
 from game.events.spring_flood import SpringFlood
-from bot.services.message_broadcast_service import MessageBroadcastService
+from messages.game_message_service import GameMessageService
 
 class TurnProcessor:
     def __init__(self):
@@ -14,20 +11,23 @@ class TurnProcessor:
 
     async def process_turn(self, game, context):
         if not self._check_preconditions(game):
-            return
+            return []
 
         previous_quality = (game.lake.level, game.lake.position)
 
         self._collect_flags(game)
         self._apply_all_actions(game)
 
-        await self._notify_players_results(game, context, previous_quality)
-        if await self._advance_turn_and_check_end(game, context):
-            return
+        await self._generate_result_messages(game, previous_quality, context)
+
         game.turn += 1
 
-        await self._trigger_events(game, context)
-        await self._prompt_next_actions(game, context)
+        if game.check_game_end():
+            return [{"type": "end_game"}]
+
+        messages = self._trigger_events(game)
+        messages += self._generate_next_action_prompts(game)
+        return messages
 
     def _check_preconditions(self, game):
         return not game.meeting_active and game.all_actions_collected()
@@ -37,7 +37,6 @@ class TurnProcessor:
             self.action_service.apply_action(game, player)
             player.clear_action()
 
-        # clear
         delattr(game, 'has_bonus')
         delattr(game, 'has_penalty')
 
@@ -45,14 +44,7 @@ class TurnProcessor:
         game.has_bonus = any(p.current_action == ACTION_BONUS for p in game.players.values())
         game.has_penalty = any(p.current_action == ACTION_PENALTY for p in game.players.values())
 
-    async def _clear_previous_turn_results(self, player, context):
-        if hasattr(player, "last_message_id") and player.last_message_id:
-            try:
-                await context.bot.delete_message(chat_id=player.player_id, message_id=player.last_message_id)
-            except:
-                pass
-
-    async def _notify_players_results(self, game, context, previous_quality):
+    async def _generate_result_messages(self, game, previous_quality, context):
         next_scores = game.lake.get_current_scores()
         current_quality = (
             game.lake.level,
@@ -62,8 +54,6 @@ class TurnProcessor:
         )
 
         for player in game.players.values():
-            await self._clear_previous_turn_results(player, context)
-
             turn_info = GameMessageService.get_turn_info(
                 previous_quality,
                 current_quality,
@@ -73,31 +63,48 @@ class TurnProcessor:
                 player.score
             )
 
-            msg = await context.bot.send_message(chat_id=player.player_id, text=turn_info)
-            player.last_message_id = msg.message_id
+            await self._delete_previous_messages(player, context)
 
+            msg = await context.bot.send_message(
+                chat_id=player.player_id,
+                text=turn_info
+            )
+            player.last_result_msg_id = msg.message_id
             player.clear_curr_turn_points()
 
-    async def _advance_turn_and_check_end(self, game, context):
-        if game.check_game_end():
-            await GameEngine(game, context).end_game()
-            return True
-        return False
+    async def _delete_previous_messages(self, player, context):            
+        if player.last_result_msg_id:
+            try:
+                await context.bot.delete_message(
+                    chat_id=player.player_id,
+                    message_id=player.last_result_msg_id
+                )
+            except:
+                pass
 
-    async def _trigger_events(self, game, context):
+    def _trigger_events(self, game):
+        results = []
+
         if game.turn % FLOOD_INTERVAL == 0:
             flood_message = SpringFlood.start_flood(game.lake)
             if flood_message:
-                await MessageBroadcastService.send_all(
-                    bot=context.bot,
-                    players=game.players,
-                    text=flood_message
-                )
+                for player in game.players.values():
+                    results.append({
+                        "type": "send_message",
+                        "chat_id": player.player_id,
+                        "text": flood_message
+                    })
 
-        if game.turn % MEETING_INTERVAL == 0:
-            await Meeting.start_meeting(context, game)
+        if game.turn % game.settings.meeting_interval == 0:
+            results.append({"type": "start_meeting"})
 
-    async def _prompt_next_actions(self, game, context):
-        if game.turn % MEETING_INTERVAL != 0:
-            for player in game.players.values():
-                await prompt_action(context, player.player_id)
+        return results
+
+    def _generate_next_action_prompts(self, game):
+        if game.turn == 1 or game.turn % game.settings.meeting_interval == 0:
+            return []
+
+        return [
+            {"type": "prompt_action", "chat_id": player.player_id}
+            for player in game.players.values()
+        ]

@@ -1,15 +1,12 @@
-from telegram import InlineKeyboardMarkup, InlineKeyboardButton
 from messages.events_messages import (
     meeting_started_message,
     meeting_finished_message,
-    no_communication_message,
-    end_meeting
+    end_meeting,
 )
-from bot.services.message_broadcast_service import MessageBroadcastService
-from bot.services.keyboard_messenger import KeyboardMessenger
-from bot.ui_components.promt_action import prompt_action
+from bot.services.meeting_service import MessengerService
 from config.settings import MEETING_DURATION
-
+from telegram import InlineKeyboardMarkup, InlineKeyboardButton
+import asyncio
 
 class Meeting:
     @staticmethod
@@ -21,38 +18,60 @@ class Meeting:
             [InlineKeyboardButton(end_meeting, callback_data="end_meeting_vote")]
         ])
 
-        await MessageBroadcastService.send_all(
-            bot=context.bot,
-            players=game.players,
-            text=meeting_started_message(game),
-            reply_markup=keyboard
-        )
+        for player in game.players.values():
+            await context.bot.send_message(
+                chat_id=player.player_id,
+                text=meeting_started_message(game),
+                reply_markup=keyboard
+            )
 
-        # auto end meeting
+        # automatic end of the meeting
         context.job_queue.run_once(
-            callback=Meeting.auto_end_meeting_job,
+            callback=Meeting._auto_end_meeting_job,
             when=MEETING_DURATION
         )
 
     @staticmethod
-    async def auto_end_meeting_job(context):
+    async def _auto_end_meeting_job(context):
         game = context.application.bot_data.get("game")
         if game and game.meeting_active:
-            await Meeting.manual_end_meeting(context, game)
+            actions = Meeting.manual_end_meeting(game)
+            await MessengerService.handle_actions(context.bot, actions)
 
     @staticmethod
-    async def manual_end_meeting(context, game):
+    def manual_end_meeting(game):
         if not game.meeting_active:
-            return
-    
+            return []
+
         game.meeting_active = False
         game.meeting_end_votes.clear()
 
+        actions = []
         for player in game.players.values():
-            await KeyboardMessenger.send(
-                bot=context.bot,
-                chat_id=player.player_id,
-                text=meeting_finished_message,
-                state="in_game"
+            actions.append({
+                "type": "send_message",
+                "chat_id": player.player_id,
+                "text": meeting_finished_message,
+                "keyboard_state": "in_game"
+            })
+            actions.append({
+                "type": "prompt_action",
+                "chat_id": player.player_id
+            })
+
+        return actions
+
+    @staticmethod
+    async def _execute_action(act, context):
+        from bot.ui_components.promt_action import prompt_action
+        from bot.services.messenger_service import Me
+
+        if act["type"] == "send_message":
+            await MessengerService.send(
+                context=context,
+                chat_id=act["chat_id"],
+                text=act["text"],
+                state=act.get("keyboard_state", "in_game")
             )
-            await prompt_action(context, player.player_id)
+        elif act["type"] == "prompt_action":
+            await prompt_action(context, act["chat_id"])

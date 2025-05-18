@@ -19,6 +19,9 @@ def joined_message(user_name, current_count, game):
 def player_connected_message(user_name, current_count, game):
     return f"👤 Гравець {user_name} приєднався до гри. Гравців: {current_count}/{game.settings.max_players}."
 
+def left_lobby_message(player):
+    return f"❗️{player.name} вийшов із лобі."
+
 game_full_message = "⚠️ Ви вже у грі або місця більше немає."
 in_game_now_message = "✅ Ви вже приєдналися до гри."
 not_registered_message = "Ви не зареєстровані у грі!"

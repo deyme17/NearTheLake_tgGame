@@ -1,7 +1,8 @@
 from bot.commands.command import BaseCommand
 from messages.state_messages import left_game_message, not_member_message
 from bot.services.state_service import StateService
-from bot.services.ui_refresh_service import UIRefreshService
+from bot.services.keyboard_messenger import KeyboardMessenger
+from bot.services.message_broadcast_service import MessageBroadcastService
 
 class LeaveLobbyCommand(BaseCommand):
     def matches(self, text: str) -> bool:
@@ -14,11 +15,21 @@ class LeaveLobbyCommand(BaseCommand):
             player = game.players.pop(user_id)
             StateService.set_state(context, user_id, "idle")
 
-            await UIRefreshService.update_keyboard(
+            await KeyboardMessenger.send(
                 bot=context.bot,
                 chat_id=user_id,
                 text=left_game_message(player.name),
                 state="idle"
             )
+
+            await MessageBroadcastService.send_all_except(
+                bot=context.bot,
+                players=game.players,
+                excluded_id=user_id,
+                text=f"❗️{player.name} вийшов із лобі."
+            )
         else:
-            await update.message.reply_text(not_member_message)
+            await context.bot.send_message(
+                chat_id=update.effective_chat.id,
+                text=not_member_message
+            )

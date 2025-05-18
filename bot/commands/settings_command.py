@@ -31,7 +31,16 @@ class SettingsCommand(BaseCommand):
         ])
 
     async def execute(self, update, context, game):
+        chat_id = update.effective_chat.id
+
         if game.state != "waiting":
-            await update.message.reply_text(settings_unavailable_message)
+            await context.bot.send_message(
+                chat_id=chat_id,
+                text=settings_unavailable_message
+            )
         else:
-            await update.message.reply_text(settings_menu_title, reply_markup=self.get_settings_keyboard(game))
+            await context.bot.send_message(
+                chat_id=chat_id,
+                text=settings_menu_title,
+                reply_markup=self.get_settings_keyboard(game)
+            )

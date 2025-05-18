@@ -12,13 +12,16 @@ class InGameStateCommandManager:
 
     async def handle(self, update, context, game):
         text = update.message.text.strip().lower()
+        user_id = update.effective_user.id
+
+        if game.meeting_active:
+            await MessageRelayService.forward_player_message(update, context, game)
+            return
+
         for command in self.commands:
             if command.matches(text):
                 await command.execute(update, context, game)
                 return
 
-        if game.meeting_active:
-            await MessageRelayService.forward_player_message(update, context, game)
-        else:
-            from messages.events_messages import no_communication_message
-            await update.message.reply_text(no_communication_message)
+        from messages.events_messages import no_communication_message
+        await update.message.reply_text(no_communication_message)

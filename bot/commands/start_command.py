@@ -15,6 +15,4 @@ class StartGameCommand(BaseCommand):
             await UIRefreshService.reply(update, context, in_game_now_message)
             return
 
-        success, count = await PlayerService.register(update, context, game)
-        if success:
-            StateService.set_state(context, user_id, "waiting_lobby")
+        await PlayerService.register(update, context, game)

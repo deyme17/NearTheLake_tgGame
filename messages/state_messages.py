@@ -11,11 +11,11 @@ game_not_init_message = "Гра не ініціалізована."
 game_not_found_message = "❌ Гру не знайдено."
 comeback_to_menu_message = "Ви повернулися в меню."
 
-def joined_message(user_name, current_count):
-    return f"✅ Ви приєдналися до гри як {user_name}. Очікуємо інших гравців: {current_count}/{MAX_PLAYERS}."
+def joined_message(user_name, current_count, game):
+    return f"✅ Ви приєдналися до гри як {user_name}. Очікуємо інших гравців: {current_count}/{game.settings.max_players}."
 
-def player_connected_message(user_name, current_count):
-    return f"👤 Гравець {user_name} приєднався до гри. Гравців: {current_count}/{MAX_PLAYERS}."
+def player_connected_message(user_name, current_count, game):
+    return f"👤 Гравець {user_name} приєднався до гри. Гравців: {current_count}/{game.settings.max_players}."
 
 game_full_message = "⚠️ Ви вже у грі або місця більше немає."
 in_game_now_message = "✅ Ви вже приєдналися до гри."

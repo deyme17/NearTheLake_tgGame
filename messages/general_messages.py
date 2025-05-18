@@ -1,6 +1,4 @@
 
-from config.settings import MAX_PLAYERS
-
 def help_message():
     return f"""Вітаю! Ось доступні команди для гри "Біля озера":
 
@@ -9,7 +7,7 @@ def help_message():
     /end_game - Закінчити гру завчасно
     
     Щоб почати, просто введіть /start.
-    Гра почнеться, коли в лоббі будуть {MAX_PLAYERS} гравців.
+    Гра почнеться, коли в лоббі будуть всі гравці.
     """
 
 settings_not_available_message = "⚠️ Налаштування доступні лише до початку гри."
@@ -29,3 +27,16 @@ greeting_menu_messsge = (
     "— «Правила гри» — щоб переглянути правила гри"
 )
 
+settings_menu_title = "⚙️ Оберіть параметр для редагування:"
+settings_enter_value_message = lambda param: f"✏️ Введіть нове значення для {param_ua.get(param, param)}:"
+settings_updated_message = lambda param, val: f"✅ {param_ua.get(param, param)} оновлено до {val}."
+settings_invalid_value = "❌ Введіть ціле число."
+settings_unavailable_message = "⚠️ Налаштування недоступні під час гри."
+
+param_ua = {
+    "MAX_PLAYERS": "Кількість гравців",
+    "GAME_DURATION_MONTHS": "Тривалість гри (в місяцях)",
+    "MEETING_INTERVAL": "Інтервал між нарадами",
+    "BONUS_SCORE": "Премія за очищення",
+    "PENALTY_SCORE": "Штраф за скидання"
+}

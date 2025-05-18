@@ -17,7 +17,7 @@ class Meeting:
         for user_id in game.players:
             await context.bot.send_message(
                 chat_id=user_id,
-                text=meeting_started_messege(),
+                text=meeting_started_messege(game),
                 reply_markup=reply_markup,
             )
 

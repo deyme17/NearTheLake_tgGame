@@ -2,7 +2,7 @@ from telegram import Update
 from telegram.ext import CallbackContext
 from config.helpers import get_game
 
-from bot.core.command_dispatcher import CommandDispatcher
+from bot.handlers.command_dispatcher import CommandDispatcher
 dispatcher = CommandDispatcher()
 
 async def handle_player_message(update: Update, context: CallbackContext):

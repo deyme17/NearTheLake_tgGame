@@ -4,6 +4,7 @@ from bot.handlers.action_handlers import handle_action_callback
 from bot.handlers.meeting_handlers import handle_end_meeting_vote
 from bot.handlers.message_handlers import handle_player_message
 from bot.ui_components.promt_action import prompt_action
+from bot.handlers.settings_handlers import handle_settings_callback
 
 from config.secrets import TOKEN
 from game.core.game import Game
@@ -23,6 +24,7 @@ def create_app():
     application.add_handler(CommandHandler("end_game", end_game_command))
     application.add_handler(CommandHandler("action", prompt_action))
     application.add_handler(CallbackQueryHandler(handle_action_callback, pattern=r"^\d$"))
+    application.add_handler(CallbackQueryHandler(handle_settings_callback, pattern="^set_"))
     application.add_handler(CallbackQueryHandler(handle_end_meeting_vote, pattern="end_meeting_vote"))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_player_message))
 

@@ -58,7 +58,7 @@ class TurnProcessor:
                 previous_quality,
                 current_quality,
                 game.turn,
-                GAME_DURATION_MONTHS,
+                game.settings.game_duration_months,
                 player.current_turn_points,
                 player.score
             )

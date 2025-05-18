@@ -1,5 +1,5 @@
 # Кількість гравців у грі
-MAX_PLAYERS = 1
+MAX_PLAYERS = 8
 
 # Тривалість гри в місяцях (4 роки = 48 місяців)
 GAME_DURATION_MONTHS = 48

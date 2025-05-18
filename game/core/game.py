@@ -1,11 +1,14 @@
-from config.settings import MAX_PLAYERS, GAME_DURATION_MONTHS
+from game.core.game_settings import GameSettings
 from game.core.lake import Lake
 from game.core.player import Player
+from config import settings
 
 class Game:
     def __init__(self):
+        # settings
+        self.settings = GameSettings()
+
         self.players = {}  # {user_id: Player}
-        self.max_players = MAX_PLAYERS
         self.state = "waiting"
         self.turn = 1
         self.lake = Lake()
@@ -19,7 +22,7 @@ class Game:
 
     def add_player(self, user_id, name):
         """Adds a player to the game"""
-        if len(self.players) < self.max_players and user_id not in self.players:
+        if len(self.players) < self.settings.max_players and user_id not in self.players:
             player = Player(user_id, name)
             self.players[user_id] = player
             
@@ -29,13 +32,14 @@ class Game:
             return True, len(self.players)
         return False, len(self.players)
 
+
     def all_actions_collected(self):
         """Checks if all players have performed an action"""
         return all(player.current_action is not None for player in self.players.values())
 
     def check_game_end(self):
         """Checks if the game end has been reached"""
-        if self.turn >= GAME_DURATION_MONTHS:
+        if self.turn >= self.settings.game_duration_months:
             self.state = "ended"
             return True
         return False

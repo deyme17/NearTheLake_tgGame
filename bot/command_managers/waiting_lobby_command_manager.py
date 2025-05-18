@@ -1,26 +1,21 @@
 from bot.commands.command import BaseCommand
 from bot.commands.rule_command import ShowRulesCommand
 from bot.commands.leave_lobby_command import LeaveLobbyCommand
-from messages.state_messages import joined_message, waiting_for_player_message
+from bot.command_managers.command_manager import BaseCommandManager
+from messages.state_messages import waiting_for_player_message
 
-
-class WaitingLobbyCommandManager:
+class WaitingLobbyCommandManager(BaseCommandManager):
     def __init__(self):
-        self.commands: list[BaseCommand] = [
+        super().__init__([
             ShowRulesCommand(),
             LeaveLobbyCommand()
-        ]
+        ])
 
     async def handle(self, update, context, game):
-        text = update.message.text.strip().lower()
-
-        for command in self.commands:
-            if command.matches(text):
-                await command.execute(update, context, game)
-                return
-
         user_id = update.effective_user.id
-        player = game.players.get(user_id)
 
-        if not player:
+        if user_id not in game.players:
             await update.message.reply_text(waiting_for_player_message)
+            return
+
+        await super().handle(update, context, game)

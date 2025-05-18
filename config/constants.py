@@ -11,5 +11,6 @@ ACTION_NAMES = {
     ACTION_PENALTY: "Штраф",
     ACTION_BONUS: "Премія"
 }
+GAME_PARAMS = ["MAX_PLAYERS", "GAME_DURATION_MONTHS", "MEETING_INTERVAL", "BONUS_SCORE", "PENALTY_SCORE"]
 
 game_matrix_path = "assets/gameMatrix_NearTheLake.png"

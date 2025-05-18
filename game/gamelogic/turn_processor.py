@@ -6,7 +6,7 @@ from config.settings import MEETING_INTERVAL, FLOOD_INTERVAL
 from config.constants import ACTION_BONUS, ACTION_PENALTY
 from game.events.meeting import Meeting
 from game.events.spring_flood import SpringFlood
-from messages.state_messages import game_finished_message
+from bot.services.message_broadcast_service import MessageBroadcastService
 
 class TurnProcessor:
     def __init__(self):
@@ -88,8 +88,11 @@ class TurnProcessor:
         if game.turn % FLOOD_INTERVAL == 0:
             flood_message = SpringFlood.start_flood(game.lake)
             if flood_message:
-                for player in game.players.values():
-                    await context.bot.send_message(chat_id=player.player_id, text=flood_message)
+                await MessageBroadcastService.send_all(
+                    bot=context.bot,
+                    players=game.players,
+                    text=flood_message
+                )
 
         if game.turn % MEETING_INTERVAL == 0:
             await Meeting.start_meeting(context, game)

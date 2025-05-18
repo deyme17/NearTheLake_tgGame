@@ -10,8 +10,9 @@ from config.helpers import get_game
 from messages.general_messages import greeting_menu_messsge
 
 async def start(update: Update, context: CallbackContext):
-    await update.message.reply_text(
-        greeting_menu_messsge,
+    await context.bot.send_message(
+        chat_id=update.effective_chat.id,
+        text=greeting_menu_messsge,
         reply_markup=get_keyboard_for_state("idle")
     )
 

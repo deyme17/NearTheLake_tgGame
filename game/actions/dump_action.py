@@ -7,5 +7,5 @@ class DumpAction(BaseAction):
         if getattr(game, 'has_penalty', False):
             player.add_points(game.settings.penalty_score)
         else:
-            score = game.lake.get_current_scores()[0]
+            score = game.lake.get_current_scores(game)[0]
             player.add_points(score)

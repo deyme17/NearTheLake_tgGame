@@ -36,7 +36,7 @@ class Meeting:
         game = context.application.bot_data.get("game")
         if game and game.meeting_active:
             actions = Meeting.manual_end_meeting(game)
-            await MessengerService.handle_actions(context.bot, actions)
+            await MessengerService.handle_actions(context, actions)
 
     @staticmethod
     def manual_end_meeting(game):

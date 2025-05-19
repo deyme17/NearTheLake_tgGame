@@ -1,8 +1,8 @@
 from messages.state_messages import (
     game_not_configure_message,
     game_started_negative_messege,
-    joined_message,
-    player_connected_message,
+    get_joined_message,
+    get_player_connected_message,
     game_full_message,
 )
 from bot.services.messenger_service import MessengerService
@@ -50,14 +50,14 @@ class SessionService:
         await MessengerService.send(
             context=context,
             chat_id=user_id,
-            text=joined_message(user_name, current_count, game),
+            text=get_joined_message(user_name, current_count, game),
             state="waiting_lobby"
         )
         await MessengerService.send_all_except(
             bot=context.bot,
             players=game.players,
             excluded_id=user_id,
-            text=player_connected_message(user_name, current_count, game)
+            text=get_player_connected_message(user_name, current_count, game)
         )
 
         if current_count == game.settings.max_players:

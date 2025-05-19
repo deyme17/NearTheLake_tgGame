@@ -5,7 +5,7 @@ have_chosen_action = "Ви вже зробили свій вибір в цьом
 choose_action_message = "Виберіть дію:"
 first_turn_message = "Перший хід!"
 
-def chosen_action_message(action):
+def get_chosen_action_message(action):
     return f"Ви вибрали: {ACTION_NAMES[action]}"
-def choice_message(action):
+def get_choice_message(action):
     return f"Ваш вибір: {ACTION_NAMES[action]}"

@@ -1,6 +1,7 @@
 from game.gamelogic.turn_processor import TurnProcessor
 from messages.state_messages import not_registered_message, game_started_negative_messege
-from messages.action_messages import choice_message, chosen_action_message, wait_others_message, have_chosen_action
+from messages.action_messages import (get_choice_message, get_chosen_action_message, 
+                                      wait_others_message, have_chosen_action)
 from config.helpers import get_game
 from telegram.error import BadRequest
 from game.core.game_coordinator import GameCoordinator
@@ -28,10 +29,10 @@ class ActionUseCase:
             return
 
         player.set_action(action)
-        await query.answer(chosen_action_message(action))
+        await query.answer(get_chosen_action_message(action))
 
         try:
-            await query.edit_message_text(text=choice_message(action))
+            await query.edit_message_text(text=get_choice_message(action))
         except BadRequest as e:
             if "Message is not modified" not in str(e):
                 raise

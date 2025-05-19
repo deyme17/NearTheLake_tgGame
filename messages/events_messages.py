@@ -1,7 +1,7 @@
-def spring_flood_message(flood_change):
+def get_spring_flood_message(flood_change):
     return f"🌊 Весняний паводок! Якість води покращилася на {flood_change} пунктів."
 
-def meeting_started_message(game):
+def get_meeting_started_message(game):
     return (
         f"🗣️ Нарада почалася! Ви маєте {game.meeting_duration // 60} хвилин для обговорення.\n"
         "Натисніть 'Закінчити нараду', якщо всі згодні завершити достроково."

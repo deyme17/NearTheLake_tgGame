@@ -1,4 +1,4 @@
-def rule_message():
+def get_rule_message():
     return """
     Гра, яку ми зараз почнемо, називається "Біля озера". 
 

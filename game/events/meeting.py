@@ -1,5 +1,5 @@
 from messages.events_messages import (
-    meeting_started_message,
+    get_meeting_started_message,
     meeting_finished_message,
     end_meeting,
 )
@@ -20,7 +20,7 @@ class Meeting:
         for player in game.players.values():
             await context.bot.send_message(
                 chat_id=player.player_id,
-                text=meeting_started_message(game),
+                text=get_meeting_started_message(game),
                 reply_markup=keyboard
             )
 

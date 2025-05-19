@@ -12,13 +12,13 @@ waiting_for_player_message = "⏳ Ви ще не приєдналися до г�
 left_game_message = lambda name: f"🚪 Гравець {name} вийшов з лобі. Ви повернулись до головного меню."
 game_started_message = "Гра почалась❗️"
 
-def joined_message(user_name, current_count, game):
+def get_joined_message(user_name, current_count, game):
     return f"✅ Ви приєдналися до гри як {user_name}. Очікуємо інших гравців: {current_count}/{game.settings.max_players}."
 
-def player_connected_message(user_name, current_count, game):
+def get_player_connected_message(user_name, current_count, game):
     return f"👤 Гравець {user_name} приєднався до гри. Гравців: {current_count}/{game.settings.max_players}."
 
-def left_lobby_message(player):
+def get_left_lobby_message(player):
     return f"❗️{player.name} вийшов із лобі."
 
 game_full_message = "⚠️ Ви вже у грі або місця більше немає."

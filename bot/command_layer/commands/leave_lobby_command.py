@@ -1,5 +1,5 @@
 from bot.command_layer.commands.command import BaseCommand
-from messages.state_messages import left_game_message, not_member_message, left_lobby_message
+from messages.state_messages import left_game_message, not_member_message, get_left_lobby_message
 from bot.services.session_service import SessionService
 from bot.services.messenger_service import MessengerService
 
@@ -26,7 +26,7 @@ class LeaveLobbyCommand(BaseCommand):
                 bot=context.bot,
                 players=game.players,
                 excluded_id=user_id,
-                text=left_lobby_message(player)
+                text=get_left_lobby_message(player)
             )
         else:
             await context.bot.send_message(

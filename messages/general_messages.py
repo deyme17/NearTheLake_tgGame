@@ -1,4 +1,4 @@
-def help_message():
+def get_help_message():
     return """📘 Довідка щодо гри \"Біля озера\":
 
     /start — Відкрити головне меню
@@ -14,12 +14,12 @@ def help_message():
 
 settings_not_available_message = "⚠️ Налаштування доступні лише до початку гри."
 
-def start_message(player_list):
+def get_start_message(player_list):
     return (
         f"🎮 Гра розпочалася! Учасники:\n{player_list}\n\n"
     )
 
-def exit_lobby_message(player):
+def get_exit_lobby_message(player):
     return f"❗️{player.name} вийшов із лобі."
 
 greeting_menu_messsge = (

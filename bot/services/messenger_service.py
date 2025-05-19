@@ -2,7 +2,6 @@ from bot.ui_components.promt_action import prompt_action
 from bot.ui_components.keyboard import get_keyboard_for_state
 
 class MessengerService:
-
     @staticmethod
     async def send(context, chat_id: int, text: str, state: str = "idle"):
         await context.bot.send_message(

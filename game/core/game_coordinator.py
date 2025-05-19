@@ -8,7 +8,7 @@ from messages.game_message_service import GameMessageService
 from bot.ui_components.promt_action import prompt_action
 from bot.services.messenger_service import MessengerService
 from bot.services.session_service import SessionService
-from bot.ui_components.keyboard import get_keyboard_for_state  # 🆕
+from bot.ui_components.keyboard import get_keyboard_for_state
 from messages.general_messages import start_message
 from messages.state_messages import comeback_to_menu_message, game_finished_message, no_game_messege
 from messages.action_messages import first_turn_message

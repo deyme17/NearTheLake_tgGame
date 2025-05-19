@@ -4,7 +4,6 @@ from messages.events_messages import (
     end_meeting,
 )
 from bot.services.meeting_service import MessengerService
-from config.settings import MEETING_DURATION
 from telegram import InlineKeyboardMarkup, InlineKeyboardButton
 import asyncio
 
@@ -28,7 +27,7 @@ class Meeting:
         # automatic end of the meeting
         context.job_queue.run_once(
             callback=Meeting._auto_end_meeting_job,
-            when=MEETING_DURATION
+            when=game.settings.meeting_duration
         )
 
     @staticmethod

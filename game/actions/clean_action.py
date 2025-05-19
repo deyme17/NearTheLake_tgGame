@@ -1,9 +1,8 @@
-from config.settings import ACTION_CLEAN_CLEAR_VAL
 from .action import BaseAction
 
 class CleanAction(BaseAction):
     def apply(self, game, player):
-        game.lake.update_quality(ACTION_CLEAN_CLEAR_VAL)
+        game.lake.update_quality(game.settings.action_clean_clear_val)
         score = game.lake.get_current_scores()[1]
         player.add_points(score)
         if getattr(game, 'has_bonus', False):

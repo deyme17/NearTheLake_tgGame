@@ -1,5 +1,4 @@
 from game.gamelogic.action_executor import ActionService
-from config.settings import FLOOD_INTERVAL
 from config.constants import ACTION_BONUS, ACTION_PENALTY
 from game.events.meeting import Meeting
 from game.events.spring_flood import SpringFlood
@@ -45,7 +44,7 @@ class TurnProcessor:
         game.has_penalty = any(p.current_action == ACTION_PENALTY for p in game.players.values())
 
     async def _generate_result_messages(self, game, previous_quality, context):
-        next_scores = game.lake.get_current_scores()
+        next_scores = game.lake.get_current_scores(game)
         current_quality = (
             game.lake.level,
             game.lake.position,
@@ -85,8 +84,8 @@ class TurnProcessor:
     def _trigger_events(self, game):
         results = []
 
-        if game.turn % FLOOD_INTERVAL == 0:
-            flood_message = SpringFlood.start_flood(game.lake)
+        if game.turn % game.settings.flood_interval == 0:
+            flood_message = SpringFlood.start_flood(game.lake, game)
             if flood_message:
                 for player in game.players.values():
                     results.append({

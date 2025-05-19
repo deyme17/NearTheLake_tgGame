@@ -1,5 +1,3 @@
-from config.settings import DUMP_SCORES, CLEAN_SCORES
-
 class Lake:
     def __init__(self):
         self.level = 0 
@@ -24,13 +22,13 @@ class Lake:
         # limits
         self.level = max(-8, min(self.level, 6))
 
-    def get_current_scores(self):
+    def get_current_scores(self, game):
         """
         Returns the points for actions 'dump' and 'clean' for the current lake level.
         """
         index = self.level + 8
-        return DUMP_SCORES[index], CLEAN_SCORES[index]
-    
+        return game.settings.dump_scores[index], game.settings.clean_scores[index]
+
     def reset_lake(self):
         """Resets the lake to its initial state."""
         self.level = 0  

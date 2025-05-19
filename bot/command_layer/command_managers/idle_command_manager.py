@@ -3,7 +3,7 @@ from bot.command_layer.commands.rule_command import ShowRulesCommand
 from bot.command_layer.commands.start_command import StartGameCommand
 from bot.command_layer.commands.settings_command import SettingsCommand
 from bot.command_layer.command_managers.command_manager import BaseCommandManager
-from messages.error_messages import uknown_parameter_message
+from messages.error_messages import unknown_parameter_message
 from messages.general_messages import settings_updated_message, settings_invalid_value
 
 class IdleStateCommandManager(BaseCommandManager):
@@ -28,7 +28,7 @@ class IdleStateCommandManager(BaseCommandManager):
             if success:
                 await update.message.reply_text(settings_updated_message(param, val))
             else:
-                await update.message.reply_text(uknown_parameter_message)
+                await update.message.reply_text(unknown_parameter_message)
             return
 
         await super().handle(update, context, game)

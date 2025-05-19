@@ -1,5 +1,5 @@
 from bot.command_layer.router import GameStateRouter
-from messages.error_messages import uknown_state_message
+from messages.error_messages import unknown_state_message
 
 class CommandDispatcher:
     def __init__(self):
@@ -12,4 +12,4 @@ class CommandDispatcher:
         if manager:
             await manager.handle(update, context, game)
         else:
-            await update.message.reply_text(uknown_state_message)
+            await update.message.reply_text(unknown_state_message)

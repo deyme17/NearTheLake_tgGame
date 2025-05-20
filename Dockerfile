@@ -1,13 +1,13 @@
-FROM python:3.9
+FROM python:3.12-slim
 
 WORKDIR /lake_game_bot
 
-COPY requirements.txt ./
-RUN pip3 install -r requirements.txt && rm -rf /root/.cache/pip
+COPY requirements.txt .
 
-ENV PYTHONPATH="${PYTHONPATH}:/lake_game_bot"
+RUN pip install --no-cache-dir -r requirements.txt
+
+ENV PYTHONPATH="/lake_game_bot"
 
 COPY . .
 
-CMD ["python", "./main.py"]
-
+CMD ["python", "main.py"]

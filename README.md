@@ -42,16 +42,15 @@ At each step, participants choose one of four actions that balance economic gain
 - Every **8 months**, a **3-minute negotiation round (meeting)** occurs, where players may discuss and vote to end early.
 - Every **12 months**, a **flood event** happens, automatically improving water quality.
 
-**New Features**
+**Features**
 
 - ✅ **Telegram Bot Integration**: Full gameplay via Telegram messages and inline keyboards.
 - ✅ **Flexible Game Settings**: All game parameters configurable (player count, duration, intervals, bonuses/penalties).
 - ✅ **State-Based Command Handling**: Each user state (idle, waiting, in-game) has its own command dispatcher.
-- ✅ **Interactive Meeting Rounds**: Players can exchange messages or voice (optional), and vote to end meetings early.
+- ✅ **Interactive Meeting Rounds**: Players can exchange messages, and vote to end meetings early.
 - ✅ **Automated Turn Processing**: Game progresses automatically when all players select actions.
 - ✅ **End Game Voting**: Players can democratically end the game before 48 rounds.
 - ✅ **Dynamic Scoring**: Action scores depend on environmental conditions, incentivizing long-term thinking.
 - ✅ **Action History Reset**: After each turn, player states and scores are cleared/prepared for the next round.
 - ✅ **Modular Architecture**: Commands, services, events, and game logic separated into independent modules for scalability.
-- ✅ **Voice Message Relay (optional)**: Supports forwarding player voice messages during meetings.
 

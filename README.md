@@ -2,7 +2,7 @@
 
 **Overview**
 
-By the Lake is a simulation-based business game designed to model the dynamics of self-organization, decision-making, and systemic interactions within an economic environment.  
+Near the Lake is a simulation-based business game designed to model the dynamics of self-organization, decision-making, and systemic interactions within an economic environment.  
 Participants act as directors of enterprises located around a lake, making monthly decisions that affect both their own profits and the ecological state of the shared water resource.
 
 This educational game is intended for use in training, research, and classroom settings to study system thinking, environmental responsibility, group dynamics, and strategic cooperation.
